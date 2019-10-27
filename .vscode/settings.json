@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "robotcontrol.h": "c",
+        "spi.h": "c"
+    }
+}

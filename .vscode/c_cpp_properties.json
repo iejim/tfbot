@@ -4,7 +4,8 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/include/librobotcontrol/library/include"
+                "${workspaceFolder}/include/librobotcontrol/library/include",
+                "${workspaceFolder}/include/melodic/include"
             ],
             "defines": [],
             "macFrameworkPath": [
