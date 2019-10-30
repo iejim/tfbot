@@ -1,6 +1,11 @@
 {
     "files.associations": {
         "robotcontrol.h": "c",
-        "spi.h": "c"
+        "spi.h": "c",
+        "ros.h": "cpp",
+        "topic.h": "cpp",
+        "common.h": "cpp",
+        "string": "cpp",
+        "iosfwd": "cpp"
     }
 }
