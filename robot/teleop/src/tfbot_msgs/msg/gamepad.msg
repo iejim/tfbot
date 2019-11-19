@@ -1,9 +1,0 @@
-uint8 rX
-uint8 rY
-uint8 lX
-uint8 lY
-uint8 Arrow
-uint8 Letter
-uint8 L
-uint8 R
-uint8 Control
