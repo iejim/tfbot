@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
+find_package(robotcontrol REQUIRED)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -121,8 +122,9 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
-  ../../../include_fw
+  #../../../include_fw
   ${Boost_INCLUDE_DIRS}
+  ${robotcontrol_INCLUDE_DIRS}
 )
 
 # En el BBB ??
@@ -131,9 +133,9 @@ include_directories(
 #)
 
 # Para compilar en x86 (la libreria solo existe en ARM)
-add_library(robotcontrol
-  ../rc_servo.cpp # En el directorio de arriba (del CMakeLists), para crear el necesario para cada paquete.
-)
+# add_library(robotcontrol
+#   ../rc_servo.cpp # En el directorio de arriba (del CMakeLists), para crear el necesario para cada paquete.
+# )
 
 add_library(${PROJECT_NAME}_fw
   # ../include_fw/nodo_tf.hpp
@@ -148,7 +150,7 @@ add_library(${PROJECT_NAME}_fw
 target_link_libraries(${PROJECT_NAME}_fw
    ${catkin_LIBRARIES}
 #   # nodo_tf
-  robotcontrol
+  ${robotcontrol_LIBRARIES}
 )
 
 ## Declare a C++ executable
@@ -173,8 +175,11 @@ target_link_libraries(${PROJECT_NAME}_nodo
   ${PROJECT_NAME}_fw
   ${catkin_LIBRARIES}
   # nodo_tf
-  robotcontrol
+  ${robotcontrol_LIBRARIES}
 )
+# Segun Makefile de RobotControl:
+# Habria que Linkear contra -pthread -lm -lrt -l:librobotcontrol.so.1 
+# como?
 
 #############
 ## Install ##
