@@ -6,3 +6,7 @@
 **/build/**
 # EN MASTER: Saltarse los resultados?
 **/devel/**
+
+#Eliminar archivos de catkin
+.catkin_workspace
+**/src/CMakeLists.txt
