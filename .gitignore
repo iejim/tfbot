@@ -5,4 +5,4 @@
 #Saltarse los archivos de compilacion
 **/build/**
 # EN MASTER: Saltarse los resultados?
-**/devel/**
+#**/devel/**
