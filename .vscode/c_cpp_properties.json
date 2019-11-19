@@ -1,16 +1,23 @@
 {
+    "env": {
+        "linux-headers": "${workspaceFolder}/../linux",
+        "fw_packages": "${workspaceFolder}/robot/firmware/*/src/*/include",
+        "tfbot_msgs" : "${workspaceFolder}/robot/teleop/devel/include"
+    },
     "configurations": [
         {
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/include/librobotcontrol/library/include",
+
+                "${workspaceFolder}/robot/firmware/include_fw",
                 "${workspaceFolder}/include/melodic/include",
-                
-                "${workspaceFolder}/../linux/usr/include",
-                "${workspaceFolder}/../linux/usr/include/c++/**",
-                "${workspaceFolder}/../linux/libc6-dev-armhf-cross/arm-linux-gnueabihf/include",
-                "${workspaceFolder}/../linux/linux-libc-dev-armhf-cross/arm-linux-gnueabihf/include"
+                "${fw_packages}",
+                "${tfbot_msgs}",
+                "${linux-headers}/usr/include",
+                "${linux-headers}/usr/include/c++/**",
+                "${linux-headers}/libc6-dev-armhf-cross/arm-linux-gnueabihf/include",
+                "${linux-headers}/linux-libc-dev-armhf-cross/arm-linux-gnueabihf/include"
             ],
             "defines": [],
             "macFrameworkPath": [
@@ -19,5 +26,7 @@
             "compilerPath": "/usr/bin/clang++"
         }
     ],
-    "version": 4
+    "version": 4,
+    
+    "enableConfigurationSquiggles": true
 }
