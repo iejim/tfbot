@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 # -*- coding: latin-1 -*-
 import rospy
 from time import sleep
@@ -10,7 +11,8 @@ from tfbot_msgs.msg import drivetrain
 #   cmd1_izq = 0
 #   cmd2_der = 0
 
-
+SEC_NO_CONTROL = 2 #Segundos sin control
+ESPERA_HZ = 5 # Frecuencia de espera (para no dejarlo solo)
 
 class TeleOpNode(object):
 
@@ -29,6 +31,8 @@ class TeleOpNode(object):
   _cmd_msg = None
 
   _no_estado = False
+  _timer = None
+  _num_faltas = 0
 
   def __init__(self, nombre = None, ns = None):
     if nombre:
@@ -59,13 +63,20 @@ class TeleOpNode(object):
     self._sub_control = rospy.Subscriber(self._topico_control, String, self.control_callback)
 
     # Iniciar nodo
-    rospy.init_node( self._nombre_nodo)
+    try:
+      rospy.init_node( self._nombre_nodo)
+    except rospy.exceptions.ROSInitException:
+      print "Error inicializando."
+      return
 
     self._no_estado = True
-    rate = rospy.Rate(5)
+    rate = rospy.Rate(ESPERA_HZ)
+    self._timer = rospy.Timer(rospy.Duration(SEC_NO_CONTROL), self.timer_callback)
+
     while not rospy.is_shutdown():
       if self._no_estado:
         rospy.logwarn("Sin comunicación.")
+      self._num_faltas = self._num_faltas + 1 # Antes de dormir
       rate.sleep()
 
   def gamepad_callback(self, data):
@@ -74,20 +85,6 @@ class TeleOpNode(object):
       # recoger la informacion, convertirla y enviarla
       msg.cmd1_izq = self.pad_a_drive(data.lY)
       msg.cmd2_der = self.pad_a_drive(data.rY)
-
-      # Por ahora, no hacerle caso
-      # msg.lX = data[1]
-      # msg.lY = data[2]
-      # msg.rX = data[3]
-      # msg.rY = data[4]
-
-      # msg.Arrow = data[5] & 0x0f
-      # msg.Letter = data[5] & 0xf0
-
-      # msg.L = data[6] & 0x0f
-      # msg.R = data[6] & 0xc0
-
-      # msg.Control = data[6] & 0x30
 
       self._pub_drivetrain.publish(msg)
       rospy.loginfo("Enviando %s" % repr(msg))
@@ -103,9 +100,16 @@ class TeleOpNode(object):
   def control_callback(self,data):
     if data.data == "UP":
       self._no_estado = False
+      self._num_faltas = 0 # Todo bien
     else:
+      self._no_estado = False # Tal vez se quiere hacer otra cosa
+      return
+
+  def timer_callback(self, event):
+    # Si no ha llego nada de control: se apaga
+    if self._num_faltas >= int(SEC_NO_CONTROL*ESPERA_HZ):
       self._no_estado = True
-      rospy.logwarn("No hay nodo de control. Deteniendo motores.")
+      rospy.logwarn("Mal estado de control. Deteniendo motores. @ " + str(event.current_real))
       msg = drivetrain()
       msg.cmd1_izq = 0.0
       msg.cmd2_der = 0.0
