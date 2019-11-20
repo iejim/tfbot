@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 {
     /* code */
 
-    SaberTooth st(nombreNodo_base, "1", "nit");
+    SaberTooth st(nombreNodo_base, "1");
 
     st.init(argc, argv);
 

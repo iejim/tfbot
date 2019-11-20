@@ -1,0 +1,4 @@
+<launch>
+  <node ns="$(optenv ROBOT)" name="Sabertooth_fw" pkg="sabertooth" type="sabertooth_nodo" output="screen"/>
+  <!-- <node name="Gamepad" pkg="driverstation" type="talker.py" output="screen"/> -->
+</launch>

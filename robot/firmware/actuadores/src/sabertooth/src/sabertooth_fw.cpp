@@ -12,11 +12,11 @@ NodoTF(nombre, id, ns)
     usMin = 1000;
     usOff = 1500;
 
-    inicializado = false;
 
     //TODO: No incluyen ningun indicio sobre cual driver controlan
     topicoComandos = "comando_drivetrain";
-    topicoAnuncio = "comando_driver_motores"; 
+    topicoAnuncio = "comando_real_motores"; 
+    
 }
 
 
@@ -24,8 +24,8 @@ SaberTooth::~SaberTooth()
 {
   // Envía un 0% a los motores
 
-  //enviarComando(usOff, usOff);
-  //rc_servo_cleanup()
+  enviarComando(usOff, usOff);
+  rc_servo_cleanup();
   inicializado = false;
 }
 
@@ -34,6 +34,7 @@ SaberTooth::~SaberTooth()
  */
 void SaberTooth::inicializar()
 {
+  prepararServo();
   // Se suscribe a /comando_drivetrain (Float32MultiArray) (debería venir de más arriba)
   ros::Subscriber sub = nh->subscribe<tfbot_msgs::drivetrain, SaberTooth>(topicoComandos, (uint32_t)2, &SaberTooth::comandoCallback, this);
   agregarSub(sub);
@@ -45,43 +46,11 @@ void SaberTooth::inicializar()
   inicializado = true;
 }
 
-void SaberTooth::correr()
-{
-  ROS_INFO("Corriendo");
-
-  if (!inicializado)
-  {
-    inicializar();
-  }
-
-  if (esPeriodico())
-  {
-    ROS_INFO("en ciclo.");
-    while (nh->ok())
-    {
-      // ROS_INFO("+++");
-      ros::spinOnce();
-      this->loopFreq->sleep();
-    }
-    
-  } else 
-  {
-    while (nh->ok())
-    {
-      // ROS_INFO("solo");
-      // ros::spinOnce();
-      // espera.sleep();
-      ros::spin();
-    }
-  }
-  ROS_INFO("Detenido");
-  
-}
 
 
 void SaberTooth::prepararServo()
 {
-  /*
+  
   if(rc_servo_init())
   {
     //error
@@ -92,7 +61,7 @@ void SaberTooth::prepararServo()
       apagarNodo();
     }
   }
-  */
+  
 }
 
 
@@ -101,7 +70,7 @@ void SaberTooth::prepararServo()
  */
 void  SaberTooth::apagarRiel()
 {
-  // rc_servo_power_rail_en(0);
+   rc_servo_power_rail_en(0);
 }
 
 void  SaberTooth::comandoCallback(tfbot_msgs::drivetrain msg)
@@ -141,8 +110,8 @@ int SaberTooth::convertirComando(float cmd)
 
 void SaberTooth::enviarComando(int ch1_cmd, int ch2_cmd)
 {
-    // rc_servo_send_pulse_us(canalFwd, ch1_cmd);
-    // rc_servo_send_pulse_us(canalTurn, ch2_cmd);
+    rc_servo_send_pulse_us(canalFwd, ch1_cmd);
+    rc_servo_send_pulse_us(canalTurn, ch2_cmd);
 
     anunciarComando(ch1_cmd, ch2_cmd);
 
@@ -162,3 +131,8 @@ void SaberTooth::anunciarComando(int ch1_cmd, int ch2_cmd)
 
 }
 
+
+void SaberTooth::emergencyCallback(const ros::WallTimerEvent& evnt) 
+{
+
+}

@@ -39,7 +39,7 @@ class SaberTooth : public NodoTF {
         int usMin;
         int usOff;
 
-        bool inicializado;
+        
 
         sstring topicoComandos;
         sstring topicoAnuncio; 
@@ -51,10 +51,12 @@ class SaberTooth : public NodoTF {
     ~SaberTooth();
 
 
-    void inicializar();
+    // Para override
+    void inicializar() override;
 
-  
-    void correr();
+    // Para override  
+    // void correr();
+
     // void calibrarMax();
     // void calibrarMin();
     
@@ -86,19 +88,23 @@ class SaberTooth : public NodoTF {
     void enviarComando(int ch1_cmd, int ch2_cmd);
 
     /**
-     * Callback para recibir comandos desde el nodo de Control.
+     * Callback para recibir comandos desde el nodo de Operacion.
      */
     void comandoCallback(tfbot_msgs::drivetrain msg);
 
+    void emergencyCallback(const ros::WallTimerEvent& evnt) override;
 
 
     /**
      * La idea es:
+      ----- en NodoTF
      * Se registra como nodo de ROS
      *    Se suscribe al topico de control global
+          Empieza el timer de Emergencia
+      ----- Fin NodoTF
      * Se suscribe al topico de control de motores
      * Se anuncia en el topico de estado de motores
-     * Se suscribe al topico (parametro?) de configuracion de motores
+     * Se suscribe al topico (parametro?) de configuracion de motores (NO AHORA)
      * Inicializa el puerto
      * Al recibir un mensaje de comando:
      *    Lo convierte a un tiempo
