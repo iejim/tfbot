@@ -16,10 +16,11 @@ ESPERA_HZ = 5 # Frecuencia de espera (para no dejarlo solo)
 
 class TeleOpNode(object):
 
-  _nombre_nodo = "teleop_nodo"
-  _topico_gamepad = "control_pad"
-  _topico_control = "control"
-  _topico_drivetrain = "drivetrain"
+  _nombre_nodo = "teleop_nodo" #Sacar fuera?
+
+  _topico_gamepad = "gamepad_control"
+  _topico_control = "control_nodos"
+  _topico_drivetrain = "comando_drivetrain"
 
   #TODO: Usar namespace para topicos
   _ns = ""
