@@ -1,3 +1,6 @@
+#!/usr/bin/env python2
+# -*- coding: latin-1 -*-
+
 # flechas : 5, # [0-7], 8 en descanso desde arriba, cw
 # lX : 1, #[0,255]
 # lY : 2,

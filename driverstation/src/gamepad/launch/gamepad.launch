@@ -1,4 +1,4 @@
 <launch>
-  <node name="Gamepad" pkg="driverstation" type="gamepad_node.py" output="screen"/>
+  <node ns="$(optenv ROBOT)" name="Gamepad-DS" pkg="gamepad" type="gamepad_nodo.py" output="screen"/>
   <!-- <node name="Gamepad" pkg="driverstation" type="talker.py" output="screen"/> -->
 </launch>
