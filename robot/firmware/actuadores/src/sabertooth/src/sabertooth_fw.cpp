@@ -24,7 +24,10 @@ SaberTooth::~SaberTooth()
 {
   // Envía un 0% a los motores
 
-  enviarComando(usOff, usOff);
+  if(inicializado)
+  {
+    enviarComando(usOff, usOff);
+  }
   rc_servo_cleanup();
   inicializado = false;
 }
@@ -50,18 +53,23 @@ void SaberTooth::inicializar()
 
 void SaberTooth::prepararServo()
 {
-  
+  ROS_INFO("Preparando Servos");
+
   if(rc_servo_init())
   {
     //error
+    
     inicializado = false;
     //apagar nodo?
     if(nh->ok()) //Qué pasa si el nodo no ha sido inicializado?
     {
       apagarNodo();
     }
+  }else 
+  {
+   ROS_INFO("Servo inicializado");
+   apagarRiel();
   }
-  
 }
 
 
