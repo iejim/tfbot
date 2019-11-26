@@ -5,13 +5,13 @@ from time import sleep
 import pywinusb.hid as hid
 from tfbot_msgs.msg import gamepad
 from std_msgs.msg import String
-from ._botones import *
+from _botones2 import *
 
 class GamepadNode(object):
 
   _nombre_nodo = "gamepad_nodo"
-  _topico_gamepad = "/control_pad"
-  _topico_control = "/control"
+  _topico_gamepad = "gamepad_control"
+  _topico_control = "control_nodos"
   _ns = "" #Namespace para topicos
 
   _pub = None
@@ -67,9 +67,10 @@ class GamepadNode(object):
       rate.sleep()
 
   def conectarUSB(self):
-    pID = 0xc216
+    #pID = 0xc216
+    #pID = 0xc21d # Nuevos
     vID = 0x046d
-    filter = hid.HidDeviceFilter(vendor_id = vID, product_id = pID)
+    filter = hid.HidDeviceFilter(vendor_id = vID)#, product_id = pID)
 
     devices = filter.get_devices()
 
@@ -80,7 +81,7 @@ class GamepadNode(object):
       rospy.loginfo("No se pudo encontrar un dispositivo. \n Revise la conexion.")
     
     if dev:
-      rospy.loginfo("Trabajando con el dispositivo: %s." % dev.product_name)
+      rospy.loginfo("Trabajando con el dispositivo: %s. 0x%4x:0x%4x" % (dev.product_name, dev.vendor_id, dev.product_id)
     else:
       return False
 
@@ -88,7 +89,11 @@ class GamepadNode(object):
     dev.open()
     
     if dev.is_opened():
-      dev.set_raw_data_handler(self.usb_data_handler)
+      #if dev.product_id == 0xc216:
+      #  dev.set_raw_data_handler(self.usb_data_handler)
+      #else:
+      #  dev.set_raw_data_handler(self.usb_data_handler2)
+      dev.set_raw_data_handler(self.usb_data_handler2)
       rospy.loginfo("Dispositivo abierto. Listo para usar.")
       self._dev_usb = dev
       return True
@@ -100,30 +105,32 @@ class GamepadNode(object):
     return self._ns + nombre 
 
   def usb_data_handler(self, data):
+    # Procesar data
+    #TODO: Usar MODE para deshabilitar todo
+    #TODO: Habilitar la lectura de botones similares al mismo tiempo
+    msg = self._usb_msg
+    
+    msg.lX = data[indices[LX]]
+    msg.lY = data[indices[LY]]
+    msg.rX = data[indices[RX]]
+    msg.rY = data[indices[RY]]
+    
+    # Botones
+    bot = data[indices["botones"]] 
+    msg.Arrow = self.leer_flechas(bot)
+    msg.Letter = self.leer_letras(bot)
+    
+    bot = data[indices["extra"]]
+    msg.L = self.leer_L(bot)
+    msg.R = self.leer_R(bot)
 
-      # Procesar data
-      #TODO: Usar MODE para deshabilitar todo
-      #TODO: Habilitar la lectura de botones similares al mismo tiempo
-
-      msg = self._usb_msg
-      msg.lX = data[indices[LX]]
-      msg.lY = data[indices[LY]]
-      msg.rX = data[indices[RX]]
-      msg.rY = data[indices[RY]]
-
-      # Botones
-      bot = data[indices["botones"]] 
-      msg.Arrow = self.leer_flechas(bot)
-      msg.Letter = self.leer_letras(bot)
-
-      bot = data[indices["extra"]]
-      msg.L = self.leer_L(bot)
-      msg.R = self.leer_R(bot)
-
-      msg.Control = self.leer_control(bot)
-
-      self._pub.publish(msg)
-      rospy.loginfo("Enviando %s" % repr(msg))
+    msg.Control = self.leer_control(bot)
+    try:
+     self._pub.publish(msg)
+     rospy.loginfo("Enviando %s" % repr(msg))
+    except rospy.ROSSerializationException:
+     rospy.loginfo("Error leyendo USB")
+      
 
   def leer_flechas(self, val):
     # Primer nibble
@@ -133,7 +140,7 @@ class GamepadNode(object):
     if nib < NO_ARROWS:
       flechas = nib
     else:
-      flechas = 0
+      flechas = 8
     return flechas
   
   def leer_letras(self, val):
@@ -154,8 +161,8 @@ class GamepadNode(object):
     elif val & masks[L2]:
       atras = L2
     elif val & masks[L3]:
+      set
       atras = L3
-      
     return atras
 
   def leer_R(self, val):
@@ -170,12 +177,90 @@ class GamepadNode(object):
     elif val & masks[START]:
       op = START
     return op
+    
+  def usb_data_handler2(self, data):
+    # Procesar data
+    #TODO: Usar MODE para deshabilitar todo
+    #TODO: Habilitar la lectura de botones similares al mismo tiempo
+    msg = self._usb_msg
+    msg.lX = data[indices[LX]]
+    msg.lY = data[indices[LY]]
+    msg.rX = data[indices[RX]]
+    msg.rY = data[indices[RY]]
+    
+    # Botones
+    bot = data[indices["botones"]] 
+    msg.Letter = self.leer_letras2(bot)
+    bot = data[indices["flechas"]] 
+    msg.Arrow = self.leer_flechas2(bot)
+    
+    msg.L = self.leer_L2(data)
+    msg.R = self.leer_R2(data)
+    
+    bot = data[indices["extra"]]
+    msg.Control = self.leer_control2(bot)
+    try:
+     self._pub.publish(msg)
+     rospy.loginfo("Enviando %s" % repr(msg))
+    except rospy.ROSSerializationException:
+     rospy.loginfo("Error leyendo USB")
 
+  def leer_L2(self,data):
+    #Devuelve 1,2,3
+    
+    # Leer 1
+    n = 0
+    if data[indices["detras"]] & masks[L1]:
+      n = 1
+    # No tiene 2 por el momento
+    if data[indices["push"]] & masks[L3]:
+      n = 3
+    
+    return n
 
+  def leer_R2(self,data):
+    #Devuelve 1,2,3
+    
+    # Leer 1
+    n = 0
+    if data[indices["detras"]] & masks[R1]:
+      n = 1
+    # No tiene 2 por el momento
+    if data[indices["push"]] & masks[R3]:
+      n = 3
+    
+    return n
 
+  def leer_letras2(self,byte):
+    # No aguanta mas de una letra
+    if byte & masks[A]:
+        return A
+    if byte & masks[B]:
+        return B
+    if byte & masks[X]:
+        return X
+    if byte & masks[Y]:
+        return Y
+    return "N"
+    
+  def leer_flechas2(self,byte):
+    n = (byte-128)>>2
+    if n>0:
+      return n-1 # Mantener compatibilidad control anterior
+    return 8
+    
+  def leer_control2(self, val):
+    # Opciones
+    op = 0
+    if val & masks[BACK]:
+      op = BACK
+    elif val & masks[START]:
+      op = START
+    return op
+    
 if __name__ == '__main__':
 
-  nodo = GamepadNode("DS-Gamepad")
+  nodo = GamepadNode("DS_Gamepad")
   nodo.correr()
   del nodo
   print "Terminado"
