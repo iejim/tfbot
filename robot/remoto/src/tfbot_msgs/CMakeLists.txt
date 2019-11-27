@@ -55,6 +55,7 @@ add_message_files(
   drivetrain.msg
   sabertooth_us.msg
   gamepad.msg
+  servo_cmd.msg
 )
 
 ## Generate services in the 'srv' folder
