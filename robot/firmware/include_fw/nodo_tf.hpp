@@ -357,14 +357,14 @@ void NodoTF::controlCallback(std_msgs::String::ConstPtr msg)
 
     // si llega un mensaje de continuar, reiniciar el Timer
 
-    if (strcmp(msg->data.c_str(),"UP"))
+    if (!strcmp(msg->data.c_str(),"UP"))
     {
         ROS_INFO("Recibido UP");
         // controlTimer.stop();
         // controlTimer.start();
         numFaltas = 0;
 
-    } else if (strcmp(msg->data.c_str(), "STOP")){
+    } else if (!strcmp(msg->data.c_str(), "STOP")){
         ROS_INFO("Recibido STOP");
         controlTimer.stop();
         // controlTimer.setPeriod( ros::WallDuration(0.01)); //10ms;
