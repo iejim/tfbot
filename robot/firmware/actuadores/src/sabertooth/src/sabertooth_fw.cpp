@@ -5,8 +5,8 @@ SaberTooth::SaberTooth(sstring nombre, sstring id, sstring ns) :
 NodoTF(nombre, id, ns)
 {
     //valores por defecto
-    canalFwd = 0;
-    canalTurn = 1;
+    canalFwd = 1;
+    canalTurn = 2;
 
     usMax = 2000;
     usMin = 1000;
@@ -92,11 +92,11 @@ void  SaberTooth::comandoCallback(tfbot_msgs::drivetrain msg)
   cmd2 = msg.cmd2_der;
   
   //Convertir comandos  
-  ROS_INFO("Llego");
+  // ROS_INFO("Llego");
 
   int val1 = convertirComando(cmd1);
   int val2 = convertirComando(cmd2);
-
+  ROS_INFO("Enviando %d: %d; %d: %d", canalFwd, val1, canalTurn, val2);
   enviarComando(val1, val2);
 
   
@@ -134,7 +134,7 @@ void SaberTooth::anunciarComando(int ch1_cmd, int ch2_cmd)
 
   msg.s1_fwd = ch1_cmd;
   msg.s2_turn = ch2_cmd;
-  ROS_INFO("Se va");
+  // ROS_INFO("Se va");
   listaPubs[topicoAnuncio].publish(msg);
 
 }
@@ -142,5 +142,6 @@ void SaberTooth::anunciarComando(int ch1_cmd, int ch2_cmd)
 
 void SaberTooth::emergencyCallback(const ros::WallTimerEvent& evnt) 
 {
+
 
 }
