@@ -66,9 +66,11 @@ void LedsComms::emergencyCallback(const ros::WallTimerEvent& evnt)
 {
   // Si no hay una comunicacion, y han pasado suficientes ciclos, grita.
   if (numFaltas > SEC_NO_CONTROL*ESPERA_HZ)
+  {
     ROS_WARN("Se perdio la comunicacion.");
     encenderLed();
-
+    contador = 0; //Para reiniciar?
+  }
 }
 
 
