@@ -4,7 +4,7 @@ LedsComms::LedsComms(sstring nombre, sstring id, sstring ns) :
 NodoTF(nombre, id, ns)
 {
     //valores por defecto
-    // contador = 0;
+    contador = 0;
     encendido = 0;
     led = RC_LED_GREEN; // Pudiera ser un parametro
     
@@ -32,7 +32,7 @@ void LedsComms::inicializar()
   if(encenderLed()==-1){
     ROS_ERROR("ERROR: No se pudo setear el LED");
     inicializado = false;
-    return -1;
+    return;
   }
   numFaltas = 0; 
   encendido = 1;
@@ -43,11 +43,20 @@ void LedsComms::inicializar()
 
 void LedsComms::ejecutarPeriodico()
 {
-    //Por defecto
-    if (numFaltas < 1000) //Para evitar overflows, resetear de vez en cuando
-        numFaltas++; 
-    else
-        numFaltas = 0;
+    // Contar para cambiar el estado del LED
+    // Solo si hay comunicación
+    if (!numFaltas) //Esta llegando info
+      contador++;
+    else:
+      contador =0;
+      encenderLed();
+    
+    if (contador == CICLOS_CONTADOR)
+      cambiarLed();
+      contador=0;
+
+    numFaltas++; 
+
 }
 
 void LedsComms::emergencyCallback(const ros::WallTimerEvent& evnt) 
@@ -60,11 +69,6 @@ void LedsComms::emergencyCallback(const ros::WallTimerEvent& evnt)
 }
 
 
-int LedsComms::encenderLed()
-{
-  return rc_led_set(led, 1);
-}
-
 int LedsComms::apagarLed()
 {
   int s = rc_led_set(led, 0);
@@ -73,7 +77,7 @@ int LedsComms::apagarLed()
   return s; // Para?
 }
 
-int LedsComms::apagarLed()
+int LedsComms::encenderLed()
 {
   int s = rc_led_set(led, 1);
   if (!s)
@@ -82,7 +86,7 @@ int LedsComms::apagarLed()
 }
 
 int LedsComms::cambiarLed()
-{s
+{
   if (encendido)
     return apagarLed();
 

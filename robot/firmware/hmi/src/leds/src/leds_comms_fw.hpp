@@ -34,7 +34,7 @@ extern "C"
 class LedsComms : public NodoTF {
 
   private:
-        // int contador;
+        int contador;
         int encendido;
         rc_led_t led;
 
