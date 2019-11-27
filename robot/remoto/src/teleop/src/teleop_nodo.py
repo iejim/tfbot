@@ -84,11 +84,12 @@ class TeleOpNode(object):
       msg = self._cmd_msg
 
       # recoger la informacion, convertirla y enviarla
+      # print "L: %d; R: %d" % (data.lY, data.rY)
       msg.cmd1_izq = self.pad_a_drive(data.lY)
       msg.cmd2_der = self.pad_a_drive(data.rY)
 
       self._pub_drivetrain.publish(msg)
-      rospy.loginfo("Enviando %s" % repr(msg))
+      # rospy.loginfo("Enviando %s" % repr(msg))
 
   def pad_a_drive(self, num):
     out_max = 100.0
@@ -99,7 +100,6 @@ class TeleOpNode(object):
     return max(min(val, out_max), out_min) # Limitar al rango
 
   def control_callback(self,data):
-    print data
     if data.data == "UP":
       self._no_estado = False
       self._num_faltas = 0 # Todo bien
