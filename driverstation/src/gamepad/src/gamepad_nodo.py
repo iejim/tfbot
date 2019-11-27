@@ -48,11 +48,11 @@ class GamepadNode(object):
 
     # Iniciar nodo
     rospy.init_node( self._nombre_nodo)
-
+    print "Registrado como %s" % rospy.get_node_uri()
     # Crear publicador
     self._pub = rospy.Publisher(self.crear_topico(self._topico_gamepad), gamepad, queue_size=1)
     self._pub_control = rospy.Publisher(self.crear_topico(self._topico_control), String, queue_size=1)
-
+    
     # Preparar gamepad 
     if not self.conectarUSB():
       return
@@ -81,7 +81,7 @@ class GamepadNode(object):
       rospy.loginfo("No se pudo encontrar un dispositivo. \n Revise la conexion.")
     
     if dev:
-      rospy.loginfo("Trabajando con el dispositivo: %s. 0x%4x:0x%4x" % (dev.product_name, dev.vendor_id, dev.product_id)
+      rospy.loginfo("Trabajando con el dispositivo: %s. 0x%4x:0x%4x" % (dev.product_name, dev.vendor_id, dev.product_id))
     else:
       return False
 
@@ -127,9 +127,9 @@ class GamepadNode(object):
     msg.Control = self.leer_control(bot)
     try:
      self._pub.publish(msg)
-     rospy.loginfo("Enviando %s" % repr(msg))
-    except rospy.ROSSerializationException:
-     rospy.loginfo("Error leyendo USB")
+    #  rospy.loginfo("Enviando \n%s" % repr(msg))
+    except rospy.ROSSerializationException as e:
+     rospy.loginfo("Error leyendo USB: %s" % e)
       
 
   def leer_flechas(self, val):
@@ -190,7 +190,8 @@ class GamepadNode(object):
     
     # Botones
     bot = data[indices["botones"]] 
-    msg.Letter = self.leer_letras2(bot)
+    msg.Letter = ord(self.leer_letras2(bot))
+    
     bot = data[indices["flechas"]] 
     msg.Arrow = self.leer_flechas2(bot)
     
@@ -201,9 +202,9 @@ class GamepadNode(object):
     msg.Control = self.leer_control2(bot)
     try:
      self._pub.publish(msg)
-     rospy.loginfo("Enviando %s" % repr(msg))
-    except rospy.ROSSerializationException:
-     rospy.loginfo("Error leyendo USB")
+     # rospy.loginfo("Enviando %s" % repr(msg))
+    except rospy.ROSSerializationException as e:
+     rospy.loginfo("Error leyendo USB: %s" % e)
 
   def leer_L2(self,data):
     #Devuelve 1,2,3
@@ -260,7 +261,7 @@ class GamepadNode(object):
     
 if __name__ == '__main__':
 
-  nodo = GamepadNode("DS_Gamepad")
+  nodo = GamepadNode("DSGamepad")
   nodo.correr()
   del nodo
   print "Terminado"
