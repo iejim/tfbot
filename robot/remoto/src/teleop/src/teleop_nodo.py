@@ -76,7 +76,8 @@ class TeleOpNode(object):
 
     while not rospy.is_shutdown():
       if self._no_estado:
-        rospy.logwarn("Sin comunicación.")
+        #rospy.logwarn("Sin comunicación.")
+        pass
       self._num_faltas = self._num_faltas + 1 # Antes de dormir
       rate.sleep()
 

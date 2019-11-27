@@ -110,7 +110,7 @@ void  SaberTooth::comandoCallback(tfbot_msgs::drivetrain msg)
 
   int val1 = convertirComando(cmd1);
   int val2 = convertirComando(cmd2);
-  ROS_INFO("Enviando %d: %d; %d: %d", canalFwd, val1, canalTurn, val2);
+  //ROS_INFO("Enviando %d: %d; %d: %d", canalFwd, val1, canalTurn, val2);
   enviarComando(val1, val2);
 
   
