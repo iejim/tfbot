@@ -74,6 +74,12 @@ public:
     //Necesario aquí???
     void correr();
 
+    /**
+     * Funcion a ejecutare en cada periodo.
+     * Se ejecuta en correr() si hay un Periodo seteado.
+     */
+    virtual void ejecutarPeriodico(); 
+
     virtual void inicializar();
 
 
@@ -245,6 +251,16 @@ void NodoTF::correr()
 void NodoTF::inicializar()
 {
     inicializado = true;
+}
+
+
+void NodoTF::ejecutarPeriodico()
+{
+    //Por defecto
+    if (numFaltas < 1000) //Para evitar overflows, resetear de vez en cuando
+        numFaltas++; 
+    else
+        numFaltas = 0;
 }
 /******** Timing *******/
 
