@@ -46,15 +46,18 @@ void LedsComms::ejecutarPeriodico()
     // Contar para cambiar el estado del LED
     // Solo si hay comunicación
     if (!numFaltas) //Esta llegando info
-      contador++;
-    else:
+    {
+        contador++;
+    } else
+    {
       contador =0;
       encenderLed();
-    
+    }
     if (contador == CICLOS_CONTADOR)
+    {
       cambiarLed();
       contador=0;
-
+    }
     numFaltas++; 
 
 }
