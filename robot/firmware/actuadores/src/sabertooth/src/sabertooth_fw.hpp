@@ -12,6 +12,7 @@
 extern "C" 
 {
   #include "rc/servo.h"
+  #include "rc/led.h"
 }
 /**
  * La clase SaberTooth se usa para interactuar

@@ -28,7 +28,11 @@ SaberTooth::~SaberTooth()
   {
     enviarComando(usOff, usOff);
   }
+  rc_led_set(RC_LED_RED, 0); // dejar apagado
+  rc_led_cleanup();
+
   rc_servo_cleanup();
+
   inicializado = false;
 }
 
@@ -37,7 +41,15 @@ SaberTooth::~SaberTooth()
  */
 void SaberTooth::inicializar()
 {
+
   prepararServo();
+  // Empezar apagado
+  if(rc_led_set(RC_LED_RED, 0)==-1){
+    ROS_ERROR("ERROR: No se pudo setear el LED");
+    inicializado = false;
+    return;
+  }
+
   // Se suscribe a /comando_drivetrain (Float32MultiArray) (debería venir de más arriba)
   ros::Subscriber sub = nh->subscribe<tfbot_msgs::drivetrain, SaberTooth>(topicoComandos, (uint32_t)2, &SaberTooth::comandoCallback, this);
   agregarSub(sub);
@@ -46,7 +58,9 @@ void SaberTooth::inicializar()
   // agregarPub(pub); //Se muere; deja de existir
   listaPubs[topicoAnuncio] = nh->advertise<tfbot_msgs::sabertooth_us>(topicoAnuncio, 5); //Deberia quedarse
 
+  rc_led_set(RC_LED_RED, 1);
   inicializado = true;
+
 }
 
 
@@ -142,6 +156,10 @@ void SaberTooth::anunciarComando(int ch1_cmd, int ch2_cmd)
 
 void SaberTooth::emergencyCallback(const ros::WallTimerEvent& evnt) 
 {
-
-
+  // Si no hay una comunicacion, y han pasado suficientes ciclos, grita.
+  if (numFaltas > SEC_NO_CONTROL*ESPERA_HZ)
+  {
+    ROS_WARN("Se perdio la comunicacion.");
+    rc_led_set(RC_LED_RED, 0);
+  }
 }
