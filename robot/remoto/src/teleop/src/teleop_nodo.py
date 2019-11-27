@@ -99,6 +99,7 @@ class TeleOpNode(object):
     return max(min(val, out_max), out_min) # Limitar al rango
 
   def control_callback(self,data):
+    print data
     if data.data == "UP":
       self._no_estado = False
       self._num_faltas = 0 # Todo bien
