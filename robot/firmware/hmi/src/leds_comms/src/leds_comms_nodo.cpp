@@ -12,13 +12,13 @@ int main(int argc, char *argv[])
 {
     /* code */
 
-    LedsComms st(nombreNodo_base, "1");
+    LedsComms nodo(nombreNodo_base, "1");
 
-    st.init(argc, argv);
+    nodo.init(argc, argv);
 
     // st.prepFrecuenciaHz(1.0);
 
-    st.correr();
+    nodo.correr();
 
     std::cout << "Finalizado" <<std::endl;
     return 0;

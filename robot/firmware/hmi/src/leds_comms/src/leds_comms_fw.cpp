@@ -38,7 +38,11 @@ void LedsComms::inicializar()
   encendido = 1;
   prepFrecuenciaHz(ESPERA_HZ);
 
-    inicializado = true;
+  // Se suscribe aqui (segun diseño deberia ser en NodoTF)
+  ros::Subscriber sub = nh->subscribe<std_msgs::String::ConstPtr, LedsComms>(topicoComandos, (uint32_t)2, &LedsComms::controlCallback, this);
+  agregarSub(sub);
+
+  inicializado = true;
 }
 
 void LedsComms::ejecutarPeriodico()
