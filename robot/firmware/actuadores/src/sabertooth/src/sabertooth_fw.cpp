@@ -62,7 +62,7 @@ void SaberTooth::inicializar()
 void SaberTooth::encenderLed()
 {
   led_msg.request.val = 1;
-  if(!led_srv.call(led_msg))
+  if(!leds_srv.call(led_msg))
   {
     ROS_INFO("Error encendiendo el LED.");
   }
@@ -72,7 +72,7 @@ void SaberTooth::encenderLed()
 void SaberTooth::apagarLed()
 {
   led_msg.request.val = 0;
-  if(!led_srv.call(led_msg))
+  if(!leds_srv.call(led_msg))
   {
     ROS_INFO("Error apagando el LED.");
   }
