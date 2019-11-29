@@ -23,11 +23,11 @@ NodoTF(nombre, id, ns)
 Servos::~Servos()
 {
   // Envía un 0% a los motores
-
+  /*
   if(inicializado)
   {
     enviarComando(usOff);
-  }
+  }*/
   apagarRiel();
   rc_servo_cleanup();
 
