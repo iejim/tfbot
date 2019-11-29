@@ -22,8 +22,8 @@ LedsControl::~LedsControl()
     std::map<rc_led_t, int>::iterator it;
     for (it = estados.begin(); it != estados.end(); it++)
     {
-        if (it.second){
-          apagarLed(it.first);
+        if (it->second){
+          apagarLed(it->first);
         }
     }
     estados.clear();
@@ -50,7 +50,7 @@ void LedsControl::init(int argc, char **argv)
 void LedsControl::inicializar()
 {
   // Empezar encendido
-  service = nh->advertiseService<LedsControl>(topico, procesar, this);
+  service = nh->advertiseService<LedsControl>(topico, &LedsControl::procesar, this);
 
   inicializado = true;
 }

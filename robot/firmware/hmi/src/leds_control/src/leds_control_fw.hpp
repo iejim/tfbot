@@ -40,7 +40,7 @@ class LedsControl {
         bool inicializado;
         ros::NodeHandlePtr nh;
         ros::ServiceServer service;
-        // rc_led_t led;
+        rc_led_t led;
 
         //Mapa de LEDS (para traducir strings recibidos)
         std::map<sstring, rc_led_t> nombres = {
