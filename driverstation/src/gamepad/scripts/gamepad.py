@@ -25,6 +25,9 @@ class GamepadNode(object):
   _dev_usb = None
   _usb_msg = None
   _datos = []
+  _mem = 0
+  _L2_val = 0
+  _R2_val = 0
 
   def __init__(self, nombre = None):
     if nombre:
@@ -189,11 +192,11 @@ class GamepadNode(object):
     print "\n%s" % msg
     print data, "\x1b[7d\r"
 
-    if self._datos.__len__() < 100:
-      self._datos.append(data[9])
-    else:
-      print self._datos
-      exit()
+    # if self._datos.__len__() < 100:
+    #   self._datos.append(data[9])
+    # else:
+    #   print self._datos
+    #   exit()
     
     
   def leer_L2(self,data):
@@ -204,8 +207,9 @@ class GamepadNode(object):
     if data[indices["detras"]] & masks[L1]:
       n = 1
 
-    
-    # No tiene 2 por el momento
+    if data[indices["cambio"]] > 0:
+      n = self.leer_gatillo2(data[indices["palancas"]], L2)
+
     if data[indices["push"]] & masks[L3]:
       n = 3
     
@@ -219,6 +223,9 @@ class GamepadNode(object):
     if data[indices["detras"]] & masks[R1]:
       n = 1
     # No tiene 2 por el momento
+    if data[indices["cambio"]] > 0:
+      n = self.leer_gatillo2(data[indices["palancas"]], R2)
+
     if data[indices["push"]] & masks[R3]:
       n = 3
     
@@ -255,14 +262,28 @@ class GamepadNode(object):
       op = START
     return op
     
-  def leer_gatillo2(self, val, num=1):
+  def leer_gatillo2(self, val, bot):
     # Lee cuanto se ha presionado el gatilllo
     # Solo se llama si se leyo un valor en data[10]
 
     #para L2 sumaer
     #Para R2, quitar
     # detectar en que direccion fue el cambio y traducir acorde
-    return
+    v = self._mem - val
+    self._mem = val
+    if v>0:
+      #bajando
+      self._L2_val = self._L2_val + v
+    else:
+      #subiendo
+      self._R2_val = self._R2_val + (-1)*v
+    
+    if bot == R2:
+      return self._R2_val
+    elif bot == L2:
+      return self._L2_val
+    else:
+       return 0
 
 if __name__ == '__main__':
   nodo = GamepadNode("DSGamepad")
