@@ -1,247 +1,270 @@
+#!/usr/bin/env python2
+# -*- coding: latin-1 -*-
 from time import sleep
-
+import sys
 import pywinusb.hid as hid
+from _botones2 import *
 
-# flechas : 5, # [0-7], 8 en descanso desde arriba, cw
-# lX : 1, #[0,255]
-# lY : 2,
-# rX : 3,
-# rY : 4,
-# botones : 5, #[24, 40, 72, 136]
-# atras : 6, #[1,2,4,8] izq-der
-# centro : 6, #[16, 32]
-# joy_botones : 6, #[64, 128]
-# modo : 7, #[0, 8] 0:normal
+class gamepad(object):
+  rX = None
+  rY = None
+  lX = None
+  lY = None
+  Arrow = None
+  Letter = None
+  L = None
+  R = None
+  Control = None
 
-# Valor reportado si no se presiona una flecha
-NO_ARROWS = 0x8
+  def __str__(self):
+    return "rX: %d, rY: %d\nlX: %d, lY: %d\nArrow: %d, Letter: %s\nL: %d, R: %d\nControl: %s" %\
+      (self.rX, self.rY, self.lX, self.lY, self.Arrow, self.Letter, self.L, self.R, self.Control.__str__())
 
-UP =          0x0 #"UP"
-UP_RIGHT =    0x1 #"UR" 
-RIGHT =       0x2 #"RT"
-RIGHT_DOWN =  0x3 #"RD"
-DOWN =        0x4 #"DN"
-DOWN_LEFT =   0x5 #"DDL"
-LEFT =        0x6 #"LT"
-LEFT_UP =     0x7 #"LP"
+class GamepadNode(object):
 
-X = "X"
-Y = "Y"
-B = "B"
-A = "A"
+  _dev_usb = None
+  _usb_msg = None
+  _datos = []
 
-L1 = "1"
-R1 = "1"
-L2 = "2"
-R2 = "2"
-L3 = "3"
-R3 = "3"
+  def __init__(self, nombre = None):
+    if nombre:
+      self._nombre_nodo = nombre
+    self._usb_msg = gamepad()
 
-BACK = "K"
-START = "S"
-
-MODE = "M"
-
-LX = 1
-LY = 2
-RX = 3
-RY = 4
-
-class Gamepad(object):
-
-  _pID = 0xc216
-  _vID = 0x046d
-
-  _indices = {
-    LX : 1, #[0,255]
-    LY : 2,
-    RX : 3,
-    RY : 4,
-    "botones" : 5, #[24, 40, 72, 136]
-    "atras" : 6, #[1,2,4,8] izq-der
-    "centro" : 6, #[16, 32]
-    "modo" : 7 #[0, 8] 0:normal
-  }
-
-  _masks = {
-    UP :          0x00 ,
-    UP_RIGHT :    0x01 ,
-    RIGHT :       0x02 ,
-    RIGHT_DOWN :  0x03 ,
-    DOWN :        0x04 ,
-    DOWN_LEFT :   0x05 ,
-    LEFT :        0x06 ,
-    LEFT_UP :     0x07 ,
     
-    X : 0x10 ,
-    Y : 0x20 ,
-    B : 0x40 ,
-    A : 0x80 ,
-    
-    L1 : 0x1 ,
-    R1 : 0x2 ,
-    L2 : 0x4 ,
-    R2 : 0x8 ,
-
-    BACK :   0x10 ,
-    START : 0x20 ,
-    L3 :    0x40 ,
-    R3 :    0x80 ,
-
-    MODE : 0x8
-  }
-
-  # Inicializados en 0
-  # _botones ={
-  #   UP :          False ,
-  #   UP_RIGHT :    False
-  #   RIGHT :       False
-  #   RIGHT_DOWN :  False
-  #   DOWN :        False
-  #   DOWN_LEFT :   False
-  #   LEFT :        False
-  #   LEFT_UP :     False
-  #
-  #   X : False
-  #   Y : False
-  #   B : False
-  #   A : False
-  #
-  #   L1 : False
-  #   R1 : False
-  #   L2 : False
-  #   R2 : False
-  #
-  #   BACK :  False
-  #   START : False
-  #   L3 :    False
-  #   R3 :    False
-  #
-  #   MODE : False
-  # }
-  #
-  _letras = {
-    _masks[X] : X ,
-    _masks[Y] : Y ,
-    _masks[B] : B ,
-    _masks[A] : A
-  }
-  
-
-  _disp_abierto = False
-  _disp = None
-
-  _actualizando = False
-
-
-  def __init__(self, dispositivo):
-    
-    filter = hid.HidDeviceFilter(vendor_id = self._vID, product_id = self._pID)
-    devices = filter.get_devices()
-    # TODO: Asignar diferentes dispositivos
-    self._disp = devices[dispositivo]
-    self._disp_abierto = self._disp.open()
 
   def __del__(self):
-    if self._disp_abierto:
-      self._disp.close()
+    if self._dev_usb and self._dev_usb.is_opened():
+      self._dev_usb.close()
+      print "Dispostivito cerrado"
 
-  def leer_esta_abierto(self):
-    return self._disp_abierto
+    print "Saliendo"
 
-  def cerrar(self):
-    self._disp_abierto = self._disp.close()
+  def correr(self):
 
-  def iniciar(self):
+    # Preparar gamepad 
+    if not self.conectarUSB():
+      return
 
-    self._disp.set_raw_data_handler(self._data_handler)
 
+    rate = 5
+    try:
+      while True:
+        sleep(1.0/rate)
+    except KeyboardInterrupt as e:
+      print "\r\n",
+    print "Terminando."
+
+  def conectarUSB(self):
+    #pID = 0xc216
+    #pID = 0xc21d # Nuevos
+    vID = 0x046d
+    filter = hid.HidDeviceFilter(vendor_id = vID)#, product_id = pID)
+
+    devices = filter.get_devices()
+
+    try: 
+      dev = devices[0]
+    except KeyError:
+      dev = False
+      print "No se pudo encontrar un dispositivo. \n Revise la conexion."
     
+    if dev:
+      print "Trabajando con el dispositivo: %s. 0x%04x:0x%04x" % (dev.product_name, dev.vendor_id, dev.product_id)
+    else:
+      return False
 
-  def _data_handler(self,data):
-    """Procesar data enviada por el control"""
-    # Será esto tan rapido como necesitamos?
-    # Los resultados deben ser guardados para la posteridad.
-    # Como este método funciona en otro thread,
-    # hay que bloquear la lectura de los valores
-    _actualizando = True
-
-    # Reiniciar el mensaje
-    ## msg = [] # o equivalente
+    print "Abriendo dispositvo."
+    dev.open()
     
+    if dev.is_opened():
+      #if dev.product_id == 0xc216:
+      #  dev.set_raw_data_handler(self.usb_data_handler)
+      #else:
+      #  dev.set_raw_data_handler(self.usb_data_handler2)
+      dev.set_raw_data_handler(self.usb_data_handler2)
+      print "Dispositivo abierto. Listo para usar."
+      self._dev_usb = dev
+      return True
+    
+    print "No se pudo abrir el dispositivo."
+    return False
+    
+  def crear_topico(self, nombre):
+    return self._ns + nombre 
+
+  def usb_data_handler(self, data):
     # Procesar data
     #TODO: Usar MODE para deshabilitar todo
     #TODO: Habilitar la lectura de botones similares al mismo tiempo
-
+    msg = self._usb_msg
+    
+    msg.lX = data[indices[LX]]
+    msg.lY = data[indices[LY]]
+    msg.rX = data[indices[RX]]
+    msg.rY = data[indices[RY]]
+    
     # Botones
-    bot = data[5] # _indices["botones"]
+    bot = data[indices["botones"]] 
+    msg.Arrow = self.leer_flechas(bot)
+    msg.Letter = self.leer_letras(bot)
+    
+    bot = data[indices["extra"]]
+    msg.L = self.leer_L(bot)
+    msg.R = self.leer_R(bot)
+
+    msg.Control = self.leer_control(bot)
+    print msg
+
+  def leer_flechas(self, val):
     # Primer nibble
-    nib = bot & 0x0f
-
-    # # Reiniciar valores
-    # for i in range(0,NO_ARROWS):
-    #     _botones[i] = 0x0 # Desactivado
-
+    nib = val & 0x0f
     # Flechas
     # Desestimar si no esta presionado (0x8)
-    if not nib < NO_ARROWS:
+    if nib < NO_ARROWS:
       flechas = nib
     else:
-      flechas = 0
-    
+      flechas = 8
+    return flechas
+  
+  def leer_letras(self, val):
     # Letras
     letra = 0
     # Segundo nibble
-    nib = bot & 0xf0
+    nib = val & 0xf0
     try: 
-      letra = self._letras[nib] # Asumiendo una a la vez
+      letra = letras[nib] # Asumiendo una a la vez
     except KeyError:
       pass
-      
-    # Traseros
-    atras_R = 0
-    atras_L = 0 
+    return letra
 
-    bot = data[6] # _indices["atras"]
+  def leer_L(self, val):
+    atras = 0
+    if val & masks[L1]:
+      atras = L1
+    elif val & masks[L2]:
+      atras = L2
+    elif val & masks[L3]:
+      set
+      atras = L3
+    return atras
 
-    if bot & self._masks[L1]:
-      atras_L = L1
-    elif bot & self._masks[L2]:
-      atras_L  = L2
-    elif bot & self._masks[L3]:
-      atras_L = L3
-    # El else se cubre con el default arriba
+  def leer_R(self, val):
+    val = val >> 1
+    return self.leer_L(val)
 
-    if bot & self._masks[R1]:
-      atras_R = R1
-    elif bot & self._masks[R2]:
-      atras_R  = R2
-    elif bot & self._masks[R3]:
-      atras_R = R3
-
+  def leer_control(self, val):
     # Opciones
     op = 0
-    
-    if bot & self._masks[BACK]:
+    if val & masks[BACK]:
       op = BACK
-    elif bot & self._masks[START]:
+    elif val & masks[START]:
       op = START
+    return op
+    
+  def usb_data_handler2(self, data):
+    # Procesar data
+    #TODO: Usar MODE para deshabilitar todo
+    #TODO: Habilitar la lectura de botones similares al mismo tiempo
+    msg = self._usb_msg
+    msg.lX = data[indices[LX]]
+    msg.lY = data[indices[LY]]
+    msg.rX = data[indices[RX]]
+    msg.rY = data[indices[RY]]
+    
+    # Botones
+    bot = data[indices["botones"]] 
+    msg.Letter = ord(self.leer_letras2(bot))
+    
+    bot = data[indices["flechas"]] 
+    msg.Arrow = self.leer_flechas2(bot)
+    
+    msg.L = self.leer_L2(data)
+    msg.R = self.leer_R2(data)
+    
+    bot = data[indices["extra"]]
+    msg.Control = self.leer_control2(bot)
+    
+    # print "\x1b7",
+    print "\n%s" % msg
+    print data, "\x1b[7d\r"
 
+    if self._datos.__len__() < 100:
+      self._datos.append(data[9])
+    else:
+      print self._datos
+      exit()
+    
+    
+  def leer_L2(self,data):
+    #Devuelve 1,2,3
+    
+    # Leer 1
+    n = 0
+    if data[indices["detras"]] & masks[L1]:
+      n = 1
 
-    # Actualizar
-    self._actualizando = False
+    
+    # No tiene 2 por el momento
+    if data[indices["push"]] & masks[L3]:
+      n = 3
+    
+    return n
 
-    # Preparar mensaje
-    msg.lX = data[LX]
-    msg.lY = data[LY]
-    msg.rX = data[RX]
-    msg.rT = data[RY]
-    msg.arrow = flechas
-    msg.letter = letra
-    msg.L = atras_L
-    msg.R = atras_R
-    msg.op = op
+  def leer_R2(self,data):
+    #Devuelve 1,2,3
+    
+    # Leer 1
+    n = 0
+    if data[indices["detras"]] & masks[R1]:
+      n = 1
+    # No tiene 2 por el momento
+    if data[indices["push"]] & masks[R3]:
+      n = 3
+    
+    return n
 
-    self._pub.publish(msg) # No se si se pueda llamar desde aqui
+  def leer_letras2(self,byte):
+    # No aguanta mas de una letra
+    if byte & masks[A]:
+        return A
+    if byte & masks[B]:
+        return B
+    if byte & masks[X]:
+        return X
+    if byte & masks[Y]:
+        return Y
+    return "N"
+    
+  def leer_flechas2(self,byte):
+    if byte > 128: 
+      n = (byte-128)>>2
+    else:
+      n = byte>>2
 
-  # Todos los accesores deben leer si se está actualizando
+    if n>0:
+      return n-1 # Mantener compatibilidad control anterior
+    return 8
+    
+  def leer_control2(self, val):
+    # Opciones
+    op = 0
+    if val & masks[BACK]:
+      op = BACK
+    elif val & masks[START]:
+      op = START
+    return op
+    
+  def leer_gatillo2(self, val, num=1):
+    # Lee cuanto se ha presionado el gatilllo
+    # Solo se llama si se leyo un valor en data[10]
+
+    #para L2 sumaer
+    #Para R2, quitar
+    # detectar en que direccion fue el cambio y traducir acorde
+    return
+
+if __name__ == '__main__':
+  nodo = GamepadNode("DSGamepad")
+  nodo.correr()
+  del nodo
