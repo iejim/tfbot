@@ -6,5 +6,4 @@
 **/build/**
 # EN MASTER: Saltarse los resultados?
 **/devel/**
-driverstation/src/gamepad/scripts/_botones2.pyc
 *.pyc
