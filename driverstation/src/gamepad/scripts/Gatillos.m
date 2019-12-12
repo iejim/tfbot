@@ -2,19 +2,20 @@ clear all
 clc
 t = 0:.03:3*pi/4;
 r = floor(127*t/(3*pi/4));
-l = floor(127*sin(t/2));
-maxi = ceil(length(r)/3);
+l = floor(127*sin(2*pi*t));
+maxi = 15;
 l = [zeros(1,maxi) l(1:end-maxi)];
+%l = [zeros(1,maxi) l(1:end-maxi)];
 c = 128-r;
 %%
 clf
-plot(t,c,t,l)
+plot(t,r,t,l)
 hold on 
 %plot(t,c,'r')
 
 %%
 f = l+c;
-plot(t,f,'k',t,f-128,'g')
+plot(t,f,'k')
 
 %% Reconstruir
 %mem
@@ -37,7 +38,7 @@ for i=1:length(t)
 %         pause
     elseif n<0
         % si bajo (n<0): actualizar R
-        Rn = v-128-L;
+        Rn = L+128-v;
         Ln = L;
     else
         Rn = R;
@@ -57,4 +58,4 @@ end
 %% ver
 
 plot(t,Rs,'m', t,Ls,'c')
-legend('C', 'L', 'f', 'Rs', 'Ls')
+legend('R', 'L', 'f', 'Rs', 'Ls')

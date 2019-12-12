@@ -1,0 +1,58 @@
+from time import sleep
+import sys
+import pywinusb.hid as hid
+
+
+vID = 0x046d
+filter = hid.HidDeviceFilter(vendor_id = vID)#, product_id = pID)
+
+devices = filter.get_devices()
+
+try: 
+    dev = devices[0]
+except KeyError:
+    dev = False
+    print "No se pudo encontrar un dispositivo. \n Revise la conexion."
+
+if dev:
+    print "Trabajando con el dispositivo: %s. 0x%04x:0x%04x" % (dev.product_name, dev.vendor_id, dev.product_id)
+    print "Abriendo dispositvo."
+    dev.open()
+
+i = dev.find_input_reports()[0]
+u = i.get_usages()
+lx =65584 :  0x10030 lX
+ly = 65585 :  0x10031 lY
+Z  = 65586 :  0x10032 Z
+rX = 65587 :  0x10033 rX
+rY = 65588 :  0x10034 rY
+H = 65593 :  0x10039 Hat?
+
+def hook(data, evt):
+    print data, 
+    print evt
+
+dev.add_event_handler(cambio[0],hook, hid.HID_EVT_CHANGED)
+
+try:
+    while dev.is_plugged():
+        sleep(0.5)
+except KeyboardInterrupt:
+    print "Fin"
+    pass
+
+589825 :  0x90001 
+589826 :  0x90002 
+589827 :  0x90003
+589828 :  0x90004
+589829 :  0x90005
+589830 :  0x90006
+589831 :  0x90007
+589832 :  0x90008
+589833 :  0x90009
+65584 :  0x10030 lX
+65585 :  0x10031 lY
+65586 :  0x10032 Z
+65587 :  0x10033 rX
+65588 :  0x10034 rY
+65593 :  0x10039 Hat?
