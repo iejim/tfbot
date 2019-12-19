@@ -103,7 +103,7 @@ void  Servos::comandoCallback(tfbot_msgs::servo_cmd msg)
   //Extraer comandos
   // sstring nombre = msg.nombre;
   
-  if (cmd.canal < canal_min || cmd.canal > canal_max)
+  if (msg.canal < canal_min || msg.canal > canal_max)
     return;
   
   float cmd;
@@ -115,7 +115,7 @@ void  Servos::comandoCallback(tfbot_msgs::servo_cmd msg)
 
   int val = convertirComando(cmd);
   //ROS_INFO("Enviando %d: %d; %d: %d", canalFwd, val1, canalTurn, val2);
-  enviarComando(cmd.canal, val);
+  enviarComando(msg.canal, val);
 
   
 
