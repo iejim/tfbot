@@ -1,9 +1,10 @@
 
-#ifndef SABERTOOTH_FW_H
-#define SABERTOOTH_FW_H
+#ifndef SERVOS_FW_H
+#define SERVOS_FW_H
 
 #include "ros/ros.h"
 #include "std_msgs/String.h"
+#include "tfbot_msgs/servo_cmd.h"
 
 #include <string>
 #include <sstream>
@@ -34,8 +35,8 @@ extern "C"
 class Servos : public NodoTF {
 
   private:
-        int canalFwd; //Canal 1 (S1)
-        int canalTurn; //Canal 2 (S2)
+        int canal_min;
+        int canal_max;
         int usMax;
         int usMin;
         int usOff;
@@ -43,7 +44,7 @@ class Servos : public NodoTF {
         
 
         sstring topicoComandos;
-        sstring topicoAnuncio; 
+        // sstring topicoAnuncio; 
 
 
   public:
@@ -72,7 +73,11 @@ class Servos : public NodoTF {
      * Forzar apagado del power al riel de PWM.
      */
     void apagarRiel();
-
+    
+    /**
+     * Encender el power al riel de PWM.
+     */
+    void encenderRiel();
 
     /**
      * Conviente un comando de porcentaje de power a tiempo.
@@ -81,17 +86,17 @@ class Servos : public NodoTF {
     int convertirComando(float cmd);
 
 
-    void anunciarComando(int ch1_cmd, int ch2_cmd);
+    // void anunciarComando(int ch1_cmd, int ch2_cmd);
 
     /**
      * Envía un comando al servos
      */
-    void enviarComando(int ch1_cmd, int ch2_cmd);
+    void enviarComando(int canal_s, int us_cmd);
 
     /**
      * Callback para recibir comandos desde el nodo de Operacion.
      */
-    void comandoCallback(tfbot_msgs::drivetrain msg);
+    void comandoCallback(tfbot_msgs::servo_cmd msg);
 
     void emergencyCallback(const ros::WallTimerEvent& evnt) override;
 
@@ -116,4 +121,4 @@ class Servos : public NodoTF {
      */
 };
 
-#endif //SABERTOOTH_FW_H
+#endif //SERVOS_FW_H

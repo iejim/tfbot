@@ -7,3 +7,4 @@
 # EN MASTER: Saltarse los resultados?
 **/devel/**
 *.pyc
+.vscode/settings.json

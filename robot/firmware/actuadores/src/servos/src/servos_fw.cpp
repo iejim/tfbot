@@ -5,8 +5,8 @@ Servos::Servos(sstring nombre, sstring id, sstring ns) :
 NodoTF(nombre, id, ns)
 {
     //valores por defecto
-    canalFwd = 1;
-    canalTurn = 2;
+    canal_min = 3;
+    canal_max = 8;
 
     usMax = 2000;
     usMin = 1000;
@@ -14,8 +14,8 @@ NodoTF(nombre, id, ns)
 
 
     //TODO: No incluyen ningun indicio sobre cual driver controlan
-    topicoComandos = "comando_drivetrain";
-    topicoAnuncio = "comando_real_motores"; 
+    topicoComandos = "comando_servos";
+    // topicoAnuncio = "comando_real_motores"; 
     
 }
 
@@ -26,11 +26,9 @@ Servos::~Servos()
 
   if(inicializado)
   {
-    enviarComando(usOff, usOff);
+    enviarComando(usOff);
   }
-  rc_led_set(RC_LED_RED, 0); // dejar apagado
-  rc_led_cleanup();
-
+  apagarRiel();
   rc_servo_cleanup();
 
   inicializado = false;
@@ -44,21 +42,21 @@ void Servos::inicializar()
 
   prepararServo();
   // Empezar apagado
-  if(rc_led_set(RC_LED_RED, 0)==-1){
-    ROS_ERROR("ERROR: No se pudo setear el LED");
+  // if(rc_led_set(RC_LED_RED, 0)==-1){
+  //   ROS_ERROR("ERROR: No se pudo setear el LED");
     inicializado = false;
-    return;
-  }
-
-  // Se suscribe a /comando_drivetrain (Float32MultiArray) (debería venir de más arriba)
-  ros::Subscriber sub = nh->subscribe<tfbot_msgs::drivetrain, Servos>(topicoComandos, (uint32_t)2, &Servos::comandoCallback, this);
+  //   return;
+  // }
+  
+  // Se suscribe a /comando_servo_cmd (Float32MultiArray) (debería venir de más arriba)
+  ros::Subscriber sub = nh->subscribe<tfbot_msgs::servo_cmd, Servos>(topicoComandos, (uint32_t)2, &Servos::comandoCallback, this);
   agregarSub(sub);
 
   // ros::Publisher pub = nh->advertise<tfbot_msgs::servos_us>(topicoAnuncio, 5);
   // agregarPub(pub); //Se muere; deja de existir
-  listaPubs[topicoAnuncio] = nh->advertise<tfbot_msgs::servos_us>(topicoAnuncio, 5); //Deberia quedarse
+  // listaPubs[topicoAnuncio] = nh->advertise<tfbot_msgs::servos_us>(topicoAnuncio, 5); //Deberia quedarse
 
-  rc_led_set(RC_LED_RED, 1);
+  // rc_led_set(RC_LED_RED, 1);
   inicializado = true;
 
 }
@@ -82,7 +80,7 @@ void Servos::prepararServo()
   }else 
   {
    ROS_INFO("Servo inicializado");
-   apagarRiel();
+   encenderRiel();
   }
 }
 
@@ -95,23 +93,29 @@ void  Servos::apagarRiel()
    rc_servo_power_rail_en(0);
 }
 
-void  Servos::comandoCallback(tfbot_msgs::drivetrain msg)
+void  Servos::encenderRiel()
+{
+   rc_servo_power_rail_en(1);
+}
+
+void  Servos::comandoCallback(tfbot_msgs::servo_cmd msg)
 {
   //Extraer comandos
   // sstring nombre = msg.nombre;
   
-  float cmd1, cmd2;
+  if (cmd.canal < canal_min || cmd.canal > canal_max)
+    return;
   
-  cmd1 = msg.cmd1_izq;
-  cmd2 = msg.cmd2_der;
+  float cmd;
+  
+  cmd = msg.cmd;
   
   //Convertir comandos  
   // ROS_INFO("Llego");
 
-  int val1 = convertirComando(cmd1);
-  int val2 = convertirComando(cmd2);
+  int val = convertirComando(cmd);
   //ROS_INFO("Enviando %d: %d; %d: %d", canalFwd, val1, canalTurn, val2);
-  enviarComando(val1, val2);
+  enviarComando(cmd.canal, val);
 
   
 
@@ -130,17 +134,16 @@ int Servos::convertirComando(float cmd)
 
 }
 
-void Servos::enviarComando(int ch1_cmd, int ch2_cmd)
+void Servos::enviarComando(int canal_s, int us_cmd)
 {
-    rc_servo_send_pulse_us(canalFwd, ch1_cmd);
-    rc_servo_send_pulse_us(canalTurn, ch2_cmd);
-
-    anunciarComando(ch1_cmd, ch2_cmd);
+    rc_servo_send_pulse_us(canal_s, us_cmd);
+    
+    // anunciarComando(ch1_cmd, ch2_cmd);
 
 }
 
 
-void Servos::anunciarComando(int ch1_cmd, int ch2_cmd)
+/* void Servos::anunciarComando(int ch1_cmd, int ch2_cmd)
 {
   tfbot_msgs::servos_us msg;
 
@@ -151,7 +154,7 @@ void Servos::anunciarComando(int ch1_cmd, int ch2_cmd)
   // ROS_INFO("Se va");
   listaPubs[topicoAnuncio].publish(msg);
 
-}
+} */
 
 
 void Servos::emergencyCallback(const ros::WallTimerEvent& evnt) 
@@ -160,6 +163,6 @@ void Servos::emergencyCallback(const ros::WallTimerEvent& evnt)
   if (numFaltas > SEC_NO_CONTROL*ESPERA_HZ)
   {
     ROS_WARN("Se perdio la comunicacion.");
-    rc_led_set(RC_LED_RED, 0);
+    // rc_led_set(RC_LED_RED, 0);
   }
 }
