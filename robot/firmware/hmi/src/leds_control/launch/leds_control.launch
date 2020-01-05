@@ -1,0 +1,3 @@
+<launch>
+  <node ns="$(optenv ROBOT)" name="LEDs_Control" pkg="leds_control" type="leds_control_nodo" output="screen"/>
+</launch>

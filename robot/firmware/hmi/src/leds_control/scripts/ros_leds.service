@@ -1,0 +1,15 @@
+[Unit]
+Description=ROS LED control service
+Requires=systemd-modules-load.service
+#After=robotcontrol.service
+Wants=multi-user.target
+
+[Service]
+User=ubuntu
+PIDFile=/run/tfbot/ros_leds.pid
+#ExecStartPre=/usr/bin/rc_startup_routine
+ExecStart=-/opt/tfbot/scripts/runner_leds.sh
+#ExecStop=/usr/bin/rc_kill
+
+[Install]
+WantedBy=graphical.target

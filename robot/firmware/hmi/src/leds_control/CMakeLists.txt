@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(tfbot_msgs)
+project(leds_control)
 
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11 -g)
+add_compile_options(-std=c++11 -g)
 
-# add_compile_options(-Wall -Wextra -Werror=float-equal -Wuninitialized -Wunused-variable -Wdouble-promotion)
+add_compile_options(-Wall -Wextra -Werror=float-equal -Wuninitialized -Wunused-variable -Wdouble-promotion)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -13,11 +13,12 @@ project(tfbot_msgs)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
-  message_generation
+  tfbot_msgs
 )
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS system)
+#find_package(robotcontrol REQUIRED)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -50,20 +51,18 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  drivetrain.msg
-  sabertooth_us.msg
-  gamepad.msg
-  servo_cmd.msg
-)
+# add_message_files(
+#   FILES
+#   Message1.msg
+#   Message2.msg
+# )
 
 ## Generate services in the 'srv' folder
-add_service_files(
-   FILES
-   LED.srv
+# add_service_files(
+#   FILES
+#   Service1.srv
 #   Service2.srv
- )
+# )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -73,14 +72,10 @@ add_service_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-)
-
-# Si genpy no compila (Windows): 
-# set GPY=C:\opt\ros\melodic\x64\share\rospy\rosbuild\scripts
-# %GPY%\genmsg_py.py C:\Users\IJ\Documents\Projects\Gamepad\ws\src\tfbot_msgs\msg\gamepad.msg
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -112,9 +107,9 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  # INCLUDE_DIRS include 
+  #INCLUDE_DIRS include 
   # LIBRARIES sabertooth_fw
-  CATKIN_DEPENDS roscpp std_msgs message_runtime
+  CATKIN_DEPENDS roscpp std_msgs
 #  DEPENDS system_lib
 )
 
@@ -124,32 +119,47 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(
-# # include
-#   ${catkin_INCLUDE_DIRS}
+include_directories(
+# include
+  ${catkin_INCLUDE_DIRS}
+  ../../../include_fw
+  ${Boost_INCLUDE_DIRS}
+  # ${robotcontrol_INCLUDE_DIRS}
+)
+
+# En el BBB ??
+#link_directories(
+#  
+#)
+
+# Para compilar en x86 (la libreria solo existe en ARM)
+# add_library(robotcontrol
+#   ../rc_servo.cpp # En el directorio de arriba (del CMakeLists), para crear el necesario para cada paquete.
 # )
 
-
-# add_library(${PROJECT_NAME}_fw
-#   # ../include_fw/nodo_tf.hpp
-#  src/${PROJECT_NAME}_fw.cpp
-# )
+add_library(${PROJECT_NAME}_fw
+  # ../include_fw/nodo_tf.hpp
+  src/leds_control_fw.cpp
+)
 # target_compile_options(${PROJECT_NAME}_fw PUBLIC -std=c++11)
 # ## Add cmake target dependencies of the library
 # ## as an example, code may need to be generated before libraries
 # ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME}_fw ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-# target_link_libraries(${PROJECT_NAME}_fw
-#   ${catkin_LIBRARIES}
+target_link_libraries(${PROJECT_NAME}_fw
+   ${catkin_LIBRARIES}
 #   # nodo_tf
-# #  robotcontrol
-# )
+  # ${robotcontrol_LIBRARIES}
+  m
+  rt
+  robotcontrol
+)
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_nodo src/sabertooth_nodo.cpp)
+add_executable(${PROJECT_NAME}_nodo src/leds_control_nodo.cpp)
 
 # target_compile_options(${PROJECT_NAME}_nodo PUBLIC -g)
 ## Rename C++ executable without prefix
@@ -164,12 +174,12 @@ catkin_package(
 #add_dependencies(${PROJECT_NAME}_nodo ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_nodo
-#   ${PROJECT_NAME}_fw
-#   ${catkin_LIBRARIES}
-#   # nodo_tf
-# #  robotcontrol
-# )
+target_link_libraries(${PROJECT_NAME}_nodo
+  ${PROJECT_NAME}_fw
+  ${catkin_LIBRARIES}
+  # nodo_tf
+  # ${robotcontrol_LIBRARIES}
+)
 
 #############
 ## Install ##
@@ -187,13 +197,13 @@ catkin_package(
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
-# install(TARGETS ${PROJECT_NAME}_node
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(TARGETS ${PROJECT_NAME}_nodo
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark libraries for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
-# install(TARGETS ${PROJECT_NAME}
+# install(TARGETS ${PROJECT_NAME}_nodo
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
@@ -207,12 +217,23 @@ catkin_package(
 # )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
+install(FILES
+  launch/leds_control.launch
+  # myfile2
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
+install(FILES
+  scripts/runner_leds.sh
+  # myfile2
+  DESTINATION /opt/tfbot/scripts
+)
+
+install(FILES
+  scripts/ros_leds.service
+  # myfile2
+  DESTINATION /opt/tfbot/services
+)
 #############
 ## Testing ##
 #############
