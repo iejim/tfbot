@@ -4,6 +4,7 @@
 
 #include "ros/ros.h"
 #include "std_msgs/String.h"
+#include "tfbot_msgs/LED.h"
 
 #include <string>
 #include <sstream>
@@ -12,7 +13,7 @@
 extern "C" 
 {
   #include "rc/servo.h"
-  #include "rc/led.h"
+  // #include "rc/led.h"
 }
 /**
  * La clase SaberTooth se usa para interactuar
@@ -44,6 +45,12 @@ class SaberTooth : public NodoTF {
 
         sstring topicoComandos;
         sstring topicoAnuncio; 
+
+        sstring topicoLeds = "control_leds";
+        ros::ServiceClient leds_srv;
+        sstring LED = "RED";
+        tfbot_msgs::LED led_msg;
+        bool estado_led = 0;
 
 
   public:
@@ -96,6 +103,9 @@ class SaberTooth : public NodoTF {
     void emergencyCallback(const ros::WallTimerEvent& evnt) override;
 
 
+    void encenderLed();
+    void apagarLed();
+    void cambiarLed();
     /**
      * La idea es:
       ----- en NodoTF

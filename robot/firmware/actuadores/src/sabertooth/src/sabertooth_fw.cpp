@@ -16,6 +16,8 @@ NodoTF(nombre, id, ns)
     //TODO: No incluyen ningun indicio sobre cual driver controlan
     topicoComandos = "comando_drivetrain";
     topicoAnuncio = "comando_real_motores"; 
+
+    led_msg.request.led = LED;
     
 }
 
@@ -28,10 +30,8 @@ SaberTooth::~SaberTooth()
   {
     enviarComando(usOff, usOff);
   }
-  rc_led_set(RC_LED_RED, 0); // dejar apagado
-  rc_led_cleanup();
-
   rc_servo_cleanup();
+  apagarLed();
 
   inicializado = false;
 }
@@ -43,12 +43,6 @@ void SaberTooth::inicializar()
 {
 
   prepararServo();
-  // Empezar apagado
-  if(rc_led_set(RC_LED_RED, 0)==-1){
-    ROS_ERROR("ERROR: No se pudo setear el LED");
-    inicializado = false;
-    return;
-  }
 
   // Se suscribe a /comando_drivetrain (Float32MultiArray) (debería venir de más arriba)
   ros::Subscriber sub = nh->subscribe<tfbot_msgs::drivetrain, SaberTooth>(topicoComandos, (uint32_t)2, &SaberTooth::comandoCallback, this);
@@ -58,12 +52,42 @@ void SaberTooth::inicializar()
   // agregarPub(pub); //Se muere; deja de existir
   listaPubs[topicoAnuncio] = nh->advertise<tfbot_msgs::sabertooth_us>(topicoAnuncio, 5); //Deberia quedarse
 
-  rc_led_set(RC_LED_RED, 1);
+  leds_srv = nh->serviceClient<tfbot_msgs::LED>(topicoLeds); // Pudiera ser persistente
+
   inicializado = true;
+  encenderLed();
 
 }
 
+void SaberTooth::encenderLed()
+{
+  led_msg.request.val = 1;
+  if(!led_srv.call(led_msg))
+  {
+    ROS_INFO("Error encendiendo el LED.");
+  }
+  estado_led = true;
+}
 
+void SaberTooth::apagarLed()
+{
+  led_msg.request.val = 0;
+  if(!led_srv.call(led_msg))
+  {
+    ROS_INFO("Error apagando el LED.");
+  }
+  estado_led = false;
+}
+
+void SaberTooth::cambiarLed()
+{
+  if (estado_led) {
+    apagarLed();
+    return;
+  } 
+
+  encenderLed();
+}
 
 void SaberTooth::prepararServo()
 {
@@ -82,7 +106,7 @@ void SaberTooth::prepararServo()
   }else 
   {
    ROS_INFO("Servo inicializado");
-   apagarRiel();
+  //  apagarRiel();
   }
 }
 
@@ -112,6 +136,7 @@ void  SaberTooth::comandoCallback(tfbot_msgs::drivetrain msg)
   int val2 = convertirComando(cmd2);
   //ROS_INFO("Enviando %d: %d; %d: %d", canalFwd, val1, canalTurn, val2);
   enviarComando(val1, val2);
+  cambiarLed();
 
   
 
@@ -160,6 +185,5 @@ void SaberTooth::emergencyCallback(const ros::WallTimerEvent& evnt)
   if (numFaltas > SEC_NO_CONTROL*ESPERA_HZ)
   {
     ROS_WARN("Se perdio la comunicacion.");
-    rc_led_set(RC_LED_RED, 0);
   }
 }
