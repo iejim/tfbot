@@ -39,6 +39,7 @@ class LedsControl {
         sstring ns;
         bool inicializado;
         ros::NodeHandlePtr nh;
+        ros::ServiceServer service;
         // rc_led_t led;
 
         //Mapa de LEDS (para traducir strings recibidos)
@@ -70,7 +71,7 @@ class LedsControl {
     ~LedsControl();
 
 
-    void init();
+    void init(int argc, char **argv);
 
     void inicializar();
 
@@ -83,7 +84,7 @@ class LedsControl {
 
     bool procesar(tfbot_msgs::LED::Request &req, tfbot_msgs::LED::Response &res);
     
-    int encenderLed(rc_led_t l;
+    int encenderLed(rc_led_t l);
 
     int apagarLed(rc_led_t l);
     

@@ -33,16 +33,29 @@ LedsControl::~LedsControl()
   inicializado = false;
 }
  
+void LedsControl::init(int argc, char **argv)
+{
+
+    ros::init(argc, argv, nombreNodo);
+
+    // Al usar un shared_ptr, habria mas control de su existencia
+    ros::NodeHandlePtr pn( new ros::NodeHandle(ns) );
+    nh = pn; // Se exportará el valor fuera del scope?
+
+    ROS_INFO("Nodo inicializado: %s", nombreNodo.c_str());
+
+
+}
 
 void LedsControl::inicializar()
 {
   // Empezar encendido
-  ros::ServiceServer service = nh->advertiseService(topico, procesar);
+  service = nh->advertiseService<LedsControl>(topico, procesar, this);
 
   inicializado = true;
 }
 
-bool LedsControl::procesar(req, res)
+bool LedsControl::procesar(tfbot_msgs::LED::Request &req, tfbot_msgs::LED::Response &res)
 {
   // Extraer led del mensaje y atender
   try
@@ -85,6 +98,7 @@ void LedsControl::correr()
   ROS_INFO("Detenido");
   
 }
+
 /*
 void LedsControl::ejecutarPeriodico()
 {
@@ -104,21 +118,21 @@ void LedsControl::ejecutarPeriodico()
 // }
 
 
-int LedsControl::apagarLed(l)
+int LedsControl::apagarLed(rc_led_t l)
 {
   int s = rc_led_set(l, 0);
   estados[l] = s;
   return s; // Para?
 }
 
-int LedsControl::encenderLed(l)
+int LedsControl::encenderLed(rc_led_t l)
 {
   int s = rc_led_set(l, 1);
   estados[l] = s;
   return s; // Para?
 }
 
-int LedsControl::cambiarLed(l)
+int LedsControl::cambiarLed(rc_led_t l)
 {
   if (estados[l])
     return apagarLed(l);
