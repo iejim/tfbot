@@ -227,6 +227,7 @@ install(FILES
   scripts/runner_sabertooth.sh
   # myfile2
   DESTINATION /opt/tfbot/scripts
+  PERMISSIONS WORLD_EXECUTE GROUP_WRITE
 )
 
 install(FILES

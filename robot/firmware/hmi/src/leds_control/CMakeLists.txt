@@ -227,6 +227,7 @@ install(FILES
   scripts/runner_leds.sh
   # myfile2
   DESTINATION /opt/tfbot/scripts
+  PERMISSIONS WORLD_EXECUTE GROUP_WRITE
 )
 
 install(FILES
