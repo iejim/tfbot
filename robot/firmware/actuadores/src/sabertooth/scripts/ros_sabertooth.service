@@ -1,0 +1,15 @@
+[Unit]
+Description=ROS Sabertooth Root
+Requires=systemd-modules-load.service
+#After=ros_teleop.service
+Wants=multi-user.target
+
+[Service]
+#User=ubuntu
+PIDFile=/run/tfbot/ros_sabertooth.pid
+#ExecStartPre=/usr/bin/rc_startup_routine
+ExecStart=-/opt/tfbot/scripts/runner_sabertooth.sh
+#ExecStop=/usr/bin/rc_kill
+
+[Install]
+WantedBy=graphical.target

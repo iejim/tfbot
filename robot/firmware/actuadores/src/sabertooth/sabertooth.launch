@@ -1,5 +1,0 @@
-<launch>
- <group ns="$(optenv ROBOT)" >
-  <node name="Sabertooth" pkg="sabertooth" type="sabertooth_noto" output="log" respawn="true" />
- </group>
-</launch>

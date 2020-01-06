@@ -217,11 +217,23 @@ install(TARGETS ${PROJECT_NAME}_nodo
 # )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
+install(FILES
+  launch/sabertooth.launch
+  # myfile2
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+install(FILES
+  scripts/runner_sabertooth.sh
+  # myfile2
+  DESTINATION /opt/tfbot/scripts
+)
+
+install(FILES
+  scripts/ros_sabertooth.service
+  # myfile2
+  DESTINATION /opt/tfbot/services
+)
 
 #############
 ## Testing ##
