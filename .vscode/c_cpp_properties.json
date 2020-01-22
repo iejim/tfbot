@@ -9,7 +9,6 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-
                 "${workspaceFolder}/robot/firmware/include_fw",
                 "${workspaceFolder}/include/melodic/include",
                 "${fw_packages}",
@@ -24,6 +23,16 @@
                 "/Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk/System/Library/Frameworks"
             ],
             "compilerPath": "/usr/bin/clang++"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/robot/firmware/include_fw",
+                "/usr/arm-linux-gnueabihf/include",
+                "/home/ij/build/librobotcontrol-master/library/include",
+                "/home/ij/build/melodic/include"
+            ]
         }
     ],
     "version": 4,
