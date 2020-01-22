@@ -6,7 +6,10 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <string.h>
 #include <robotcontrol.h> // includes ALL Robot Control subsystems
 
 // function declarations
@@ -24,7 +27,22 @@ void on_mode_release();
 //Pressed for 2 seconds, MODE restarts ROS and services
 void on_mode_press();
 
-int check_process();
+void check_main_processes();
+int check_service(const char* service);
+
+void start_service(const char* service);
+void restart_service(const char* service);
+void stop_service(const char* service);
+
+
+// Main Services
+const char ST[] = "ros_sabertooth";
+const char Leds[] = "ros_leds";
+const char Servos[] = "ros_servos";
+
+// Runnable
+const char JavaBot[] = "ros_javabot";
+const char TeleOp[] = "ros_teleop";
 
 /**
  * This template contains these critical components
@@ -76,8 +94,8 @@ int main()
 	rc_make_pid_file();
 
 
-	printf("\nPress and release pause button to turn green LED on and off\n");
-	printf("hold pause button down for 2 seconds to exit\n");
+	// printf("\nPress and release pause button to turn green LED on and off\n");
+	// printf("hold pause button down for 2 seconds to exit\n");
 
 	// Keep looping until state changes to EXITING
 	rc_set_state(RUNNING);
@@ -88,11 +106,12 @@ int main()
 			//Check PID files and stuff
 
 			// roscore must be running
+			// - maybe checking any of them would work
+
 			// ROS firmware must be running
 				// Sabertooth
 				// Servos
 				// LEDs
-
 			
 		}
 		else{
@@ -120,9 +139,9 @@ void on_pause_release()
 }
 
 /**
-* If the user holds the pause button for 2 seconds, set state to EXITING which
-* triggers the rest of the program to exit cleanly.
-**/
+ * If the user holds the pause button for 2 seconds, set state to EXITING which
+ * triggers the rest of the program to exit cleanly.
+ */
 void on_pause_press()
 {
 	int i;
@@ -139,9 +158,70 @@ void on_pause_press()
 	return;
 }
 
-int check_process( const char* service)
+/**
+ * Watchdog process to check for ROS-related services.
+ * It would attempt to restart any of them if needed.
+ */
+void check_main_processes()
 {
-	char* s1 = "sysctl show ";
-	strcat(s1, service);
-	system(s1);
+	// what to do with the return value?
+	int status = 0;
+
+	status = check_service(ST);
+	
+	status = check_service(Servos);
+	
+	status = check_service(Leds);
+
+}
+
+int check_service(const char* service)
+{
+	pid_t pid = 0;
+	int pipefd[2];
+	FILE* output;
+	char line[256];
+	int status;
+
+	pipe(pipefd); //create a pipe
+	pid = fork(); //span a child process
+	if (pid == 0) // When 0, the child is doing the work.
+	{
+		// Child. Let's redirect its standard output to our pipe and replace process with tail
+		close(pipefd[0]);
+		dup2(pipefd[1], STDOUT_FILENO);
+		// dup2(pipefd[1], STDERR_FILENO);
+		execlp("systemctl", "systemctl", "show", "--property=SubState", service, (char*)NULL);
+	}
+
+	//Only parent gets here. Listen to what the tail says
+	waitpid(pid, &status, 0);
+	if (WIFEXITED(status))
+	{
+		close(pipefd[1]);
+		output = fdopen(pipefd[0], "r");
+
+		if(fgets(line, sizeof(line), output)) //listen to what tail writes to its standard output
+		{
+			char* tok;
+			tok = strtok(line,"=");
+			if (strcmp(tok, "SubState")==0) //First check
+			{
+				tok = strtok(NULL,"=");
+				
+				if (strcmp(tok, "running")==0) //Final check
+				{
+					return 1;
+				} else { // Not running
+					return 0;
+				}
+			}
+			perror("Error leyendo estado del servicio");
+			return -2; // Error reading output
+		}
+	} else {
+		perror("No se pudo leer el estado del servicio.");
+	}
+	// Forked child EXITED weirdly
+	return -1;
 }
