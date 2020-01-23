@@ -1,0 +1,20 @@
+[Unit]
+Description=TFBOT Main ROS Service
+Requires=wd_botones.service
+BindsTo=wd_botones.service
+#After=wd_botones.service
+Wants=multi-user.target
+Conflicts=ros_sabertooth.service
+Conflicts=ros_servos.service
+Conflicts=ros_leds.service
+
+[Service]
+#User=ubuntu
+PIDFile=/run/tfbot/ros_tfbot.pid
+#ExecStartPre=/usr/bin/rc_startup_routine
+ExecStart=-/opt/tfbot/scripts/runner_tfbot.sh
+#ExecStop=/usr/bin/rc_kill
+
+[Install]
+WantedBy=graphical.target
+#WantedBy=multi-user.target

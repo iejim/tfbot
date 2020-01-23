@@ -1,15 +1,17 @@
 [Unit]
-Description=Watchdog and Button Interface
+Description=Watchdog and Button Interface for TFBOT
 Requires=systemd-modules-load.service
 #After=ros_sabertooth.service
 #Wants=multi-user.target
 
 [Service]
 #User=ubuntu
-PIDFile=/run/tfbot/ros_servos.pid
-#ExecStartPre=/usr/bin/rc_startup_routine
-ExecStart=-/opt/tfbot/scripts/runner_servos.sh
+PIDFile=/run/tfbot/wd_botones.pid
+# Pudiera ser la que setea los LEDs
+ExecStartPre=-/opt/tfbot/scripts/default_leds.sh
+ExecStart=/opt/tfbot/share/botones/watchdog_tfbot
 #ExecStop=/usr/bin/rc_kill
 
 [Install]
 WantedBy=multi-user.target
+RequiredBy=ros_tfbot.service

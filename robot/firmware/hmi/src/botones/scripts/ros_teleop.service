@@ -1,0 +1,16 @@
+[Unit]
+Description=ROS Teleop
+Requires=systemd-modules-load.service
+Requires=wd_botones.service
+BindsTo=wd_botones.service
+Conflicts=ros_javabot.service
+
+[Service]
+User=ubuntu
+PIDFile=/run/tfbot/ros_teleop.pid
+#ExecStartPre=/usr/bin/rc_startup_routine
+ExecStart=-/opt/tfbot/scripts/runner_teleop.sh
+#ExecStop=/usr/bin/rc_kill
+
+[Install]
+WantedBy=wd_botones.service
