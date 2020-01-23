@@ -4,20 +4,19 @@ project(botones)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 #add_compile_options(-std=c++11 -g)
-# -g -c -Wall
 add_compile_options(-Wall -Wextra -Werror=float-equal -Wuninitialized -Wunused-variable -Wdouble-promotion)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  std_msgs
-  tfbot_msgs
+  #roscpp
+  #std_msgs
+  #tfbot_msgs
 )
 
 ## System dependencies are found with CMake's conventions
-find_package(Boost REQUIRED COMPONENTS system)
+#find_package(Boost REQUIRED COMPONENTS system)
 #find_package(robotcontrol REQUIRED)
 
 
@@ -109,7 +108,7 @@ find_package(Boost REQUIRED COMPONENTS system)
 catkin_package(
   #INCLUDE_DIRS include 
   # LIBRARIES sabertooth_fw
-  CATKIN_DEPENDS roscpp std_msgs
+  #CATKIN_DEPENDS roscpp std_msgs
 #  DEPENDS system_lib
 )
 
@@ -121,9 +120,9 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 # include
-  ${catkin_INCLUDE_DIRS}
-  ../../../include_fw
-  ${Boost_INCLUDE_DIRS}
+  #${catkin_INCLUDE_DIRS}
+  #../../../include_fw
+  # ${Boost_INCLUDE_DIRS}
   # ${robotcontrol_INCLUDE_DIRS}
 )
 
@@ -137,29 +136,27 @@ include_directories(
 #   ../rc_servo.cpp # En el directorio de arriba (del CMakeLists), para crear el necesario para cada paquete.
 # )
 
-add_library(${PROJECT_NAME}_fw
-  # ../include_fw/nodo_tf.hpp
-  src/botones_fw.cpp
-)
+# add_library(${PROJECT_NAME}_fw
+#   # ../include_fw/nodo_tf.hpp
+#   src/botones_fw.cpp
+# )
 # target_compile_options(${PROJECT_NAME}_fw PUBLIC -std=c++11)
 # ## Add cmake target dependencies of the library
 # ## as an example, code may need to be generated before libraries
 # ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME}_fw ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-target_link_libraries(${PROJECT_NAME}_fw
-   ${catkin_LIBRARIES}
+# target_link_libraries(${PROJECT_NAME}_fw
+#   #  ${catkin_LIBRARIES}
 #   # nodo_tf
-  # ${robotcontrol_LIBRARIES}
-  m
-  rt
-  robotcontrol
-)
+#   # ${robotcontrol_LIBRARIES}
+  
+# )
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_nodo src/botones_nodo.cpp)
+add_executable(watchdog_tfbot src/botones_fw.c)
 
 # target_compile_options(${PROJECT_NAME}_nodo PUBLIC -g)
 ## Rename C++ executable without prefix
@@ -173,13 +170,15 @@ add_executable(${PROJECT_NAME}_nodo src/botones_nodo.cpp)
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 #add_dependencies(${PROJECT_NAME}_nodo ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_nodo
-  ${PROJECT_NAME}_fw
-  ${catkin_LIBRARIES}
-  # nodo_tf
-  # ${robotcontrol_LIBRARIES}
-)
+# ## Specify libraries to link a library or executable target against
+target_link_libraries(watchdog_tfbot
+#   ${PROJECT_NAME}_fw
+#   ${catkin_LIBRARIES}
+  pthread
+  m
+  rt
+  robotcontrol
+# )
 
 #############
 ## Install ##
@@ -197,7 +196,8 @@ target_link_libraries(${PROJECT_NAME}_nodo
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
-install(TARGETS ${PROJECT_NAME}_nodo
+install(TARGETS watchdog_tfbot
+  # Tal vez deba ser SHARE_DEST
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
@@ -218,20 +218,21 @@ install(TARGETS ${PROJECT_NAME}_nodo
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 install(FILES
-  launch/botones.launch
+  launch/ros_tfbot.launch
   # myfile2
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
 install(FILES
-  scripts/runner_leds.sh
+  scripts/runner_tfbot.sh
   # myfile2
   DESTINATION /opt/tfbot/scripts
   PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_WRITE WORLD_READ WORLD_EXECUTE
 )
 
 install(FILES
-  scripts/ros_leds.service
+  scripts/wd_botones.service
+  scripts/ros_tfbot.service
   # myfile2
   DESTINATION /opt/tfbot/services
 )
