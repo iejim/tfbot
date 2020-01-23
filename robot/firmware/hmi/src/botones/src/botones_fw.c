@@ -22,7 +22,7 @@
 
 
 typedef enum status_t {
-	RUNNING,
+	STARTED,
 	STOPPED,
 	RESTARTING
 } status_t;
@@ -97,15 +97,15 @@ status_t status_javabot = STOPPED;
 status_t status_teleop = STOPPED;
 status_t status_ros = STOPPED;
 
-#define GREEN RC_LED_GREEN;
-#define RED RC_LED_RED;
+#define GREEN RC_LED_GREEN
+#define RED RC_LED_RED
 
 led_status_t led_green = OFF;
 led_status_t led_red = OFF;
 
 /**
  * This template contains these critical components
- * - ensure no existing instances are running and make new PID file
+ * - ensure no existing instances are STARTED and make new PID file
  * - start the signal handler
  * - initialize subsystems you wish to use
  * - while loop that checks for EXITING condition
@@ -115,12 +115,12 @@ led_status_t led_red = OFF;
  */
 int main()
 {
-	// make sure another instance isn't running
-	// if return value is -3 then a background process is running with
+	// make sure another instance isn't STARTED
+	// if return value is -3 then a background process is STARTED with
 	// higher privaledges and we couldn't kill it, in which case we should
 	// not continue or there may be hardware conflicts. If it returned -4
 	// then there was an invalid argument that needs to be fixed.
-	if(rc_kill_existing_process(2.0)<-2) return -1;
+	// if(rc_kill_existing_process(2.0)<-2) return -1;
 
 	// start signal handler so we can exit cleanly
 	if(rc_enable_signal_handler()==-1){
@@ -146,11 +146,11 @@ int main()
 	rc_button_set_callbacks(RC_BTN_PIN_PAUSE,on_pause_press,on_pause_release);
 	rc_button_set_callbacks(RC_BTN_PIN_MODE,on_mode_press,on_mode_release);
 
-	// make PID file to indicate your project is running
+	// make PID file to indicate your project is STARTED
 	// due to the check made on the call to rc_kill_existing_process() above
 	// we can be fairly confident there is no PID file already and we can
 	// make our own safely.
-	rc_make_pid_file();
+	// rc_make_pid_file();
 
 	// start with both LEDs off
 	if(rc_led_set(RC_LED_GREEN, 0)==-1){
@@ -168,17 +168,17 @@ int main()
 
 	// Keep looping until state changes to EXITING
 	/*
-	rc_set_state(RUNNING);
+	rc_set_state(STARTED);
 	while(rc_get_state()!=EXITING){
 		// do things based on the state
-		if(rc_get_state()==RUNNING){
+		if(rc_get_state()==STARTED){
 
 			//Check PID files and stuff
 
-			// roscore must be running
+			// roscore must be STARTED
 			// - maybe checking any of them would work
 
-			// ROS firmware must be running
+			// ROS firmware must be STARTED
 				// Sabertooth
 				// Servos
 				// LEDs
@@ -194,7 +194,7 @@ int main()
 	//Exit
 	rc_led_cleanup();
 	rc_button_cleanup();	// stop button handlers
-	rc_remove_pid_file();	// remove pid file LAST
+	// rc_remove_pid_file();	// remove pid file LAST
 	return 0;
 }
 
@@ -214,11 +214,11 @@ int press_wait()
 }
 
 /**
- * Make the Pause button toggle between paused and running states.
+ * Make the Pause button toggle between paused and STARTED states.
  */
 void on_pause_release()
 {
-	if (status_javabot != RUNNING)
+	if (status_javabot != STARTED)
 		return;
 
 	stop_javabot();
@@ -232,13 +232,13 @@ void on_pause_press()
 	if (!press_wait())
 		return;
 
-	if (status_javabot == RUNNING)
+	if (status_javabot == STARTED)
 	{	
 		return; // No hacer caso
 
 	} else if (status_javabot == STOPPED)
 	{
-		if (status_teleop == RUNNING)
+		if (status_teleop == STARTED)
 		{
 			stop_teleop();
 		}
@@ -254,7 +254,7 @@ void on_mode_release()
 {
 	switch (status_teleop)
 	{
-	case RUNNING:
+	case STARTED:
 
 		stop_teleop();
 		break;
@@ -278,7 +278,7 @@ void on_mode_press()
 		return;
 
 	// Revisar status del servicio
-	if (status_ros == RUNNING) // Y si simplemente forzamos?
+	if (status_ros == STARTED) // Y si simplemente forzamos?
 	{
 		status_ros = RESTARTING;
 		stop_ros();
@@ -340,10 +340,10 @@ int check_service(const char* service)
 			{
 				tok = strtok(NULL,"=");
 				
-				if (strcmp(tok, "running")==0) //Final check
+				if (strcmp(tok, "STARTED")==0) //Final check
 				{
 					return 1;
-				} else { // Not running
+				} else { // Not STARTED
 					return 0;
 				}
 			}
@@ -368,7 +368,7 @@ void restart_service(const char* service)
 }
 void stop_service(const char* service)
 {
-	
+
 }
 
 
@@ -381,7 +381,7 @@ void start_ros()
 	if (check_service(TF) == 1)
 	{
 		led_on(RED);
-		status_ros = RUNNING;
+		status_ros = STARTED;
 
 	} else {
 		led_hr();
@@ -406,7 +406,7 @@ void stop_ros()
 
 	} else {
 
-		status_ros = RUNNING;
+		status_ros = STARTED;
 		led_on(RED);
 	}
 }
@@ -422,7 +422,7 @@ void start_javabot()
 	if (check_service(TF))
 	{
 		led_blink4(GREEN);
-		status_javabot = RUNNING;
+		status_javabot = STARTED;
 	} else {
 		status_javabot = STOPPED;
 		led_off(GREEN);
@@ -446,7 +446,7 @@ void stop_javabot()
 
 	} else {
 		// No se detuvo, simular que corre
-		status_javabot = RUNNING;
+		status_javabot = STARTED;
 		led_blink4(GREEN);
 	}
 	
@@ -463,7 +463,7 @@ void start_teleop()
 	if (check_service(TeleOp)==1)
 	{
 		led_blink2(GREEN);
-		status_teleop = RUNNING;
+		status_teleop = STARTED;
 	} else {
 		status_teleop = STOPPED;
 		led_off(GREEN);
@@ -487,7 +487,7 @@ void stop_teleop()
 
 	} else {
 
-		status_teleop = RUNNING;
+		status_teleop = STARTED;
 		led_blink2(GREEN);
 	}
 	
