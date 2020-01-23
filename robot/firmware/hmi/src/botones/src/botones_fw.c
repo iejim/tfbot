@@ -210,9 +210,10 @@ int press_wait()
  */
 void on_pause_release()
 {
+	fprintf(stdout, "PAU Released\n");
 	if (status_javabot != STARTED)
 		return;
-
+	
 	stop_javabot();
 }
 /**
@@ -223,6 +224,7 @@ void on_pause_press()
 	// Salir si no se agota el tiempo
 	if (!press_wait())
 		return;
+	fprintf(stdout, "PAU Pressed\n");
 
 	if (status_javabot == STARTED)
 	{	
@@ -244,6 +246,8 @@ void on_pause_press()
 // Toggle Teleop Status
 void on_mode_release()
 {
+	fprintf(stdout, "MODE Released\n");
+	
 	switch (status_teleop)
 	{
 	case STARTED:
@@ -268,6 +272,7 @@ void on_mode_press()
 	// Salir si no se agota el tiempo
 	if (!press_wait())
 		return;
+	fprintf(stdout, "MODE Pressed\n");
 
 	// Revisar status del servicio
 	if (status_ros == STARTED) // Y si simplemente forzamos?
@@ -590,7 +595,7 @@ void process_leds()
 		case BLINK2:
 			blink2();
 			break;
-		case BLINK4()
+		case BLINK4:
 			blink4();
 			break;
 		default: 
@@ -613,7 +618,7 @@ void process_leds()
 		case BLINK2:
 			blink2();
 			break;
-		case BLINK4()
+		case BLINK4:
 			blink4();
 			break;
 		default: 
