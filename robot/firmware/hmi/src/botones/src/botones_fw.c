@@ -37,6 +37,8 @@ typedef enum led_status_t {
 
 // function declarations
 
+// main loop
+// void spin(); 
 // Pressed for 2 seconds, PAUSE starts JavaBot
 // TODO could be that it really "pauses it" (how to communicate with ros?? CLI command?)
 void on_pause_press();
@@ -81,6 +83,8 @@ void process_leds();
 void blink2();
 void blink4();
 void heart_rate(); // affects both LEDs
+void on(rc_led_t LED);
+void off(rc_led_t LED);
 
 // Main Services
 const char TF[] = "ros_tfbot";
@@ -167,29 +171,17 @@ int main()
 	// printf("hold pause button down for 2 seconds to exit\n");
 
 	// Keep looping until state changes to EXITING
-	/*
+	
 	rc_set_state(STARTED);
+	led_hr(); // Start waiting
 	while(rc_get_state()!=EXITING){
-		// do things based on the state
-		if(rc_get_state()==STARTED){
+		
+		
+		process_leds();
 
-			//Check PID files and stuff
-
-			// roscore must be STARTED
-			// - maybe checking any of them would work
-
-			// ROS firmware must be STARTED
-				// Sabertooth
-				// Servos
-				// LEDs
-			
-		}
-		else{
-			
-		}
 		// always sleep at some point
-		rc_usleep(100000);
-	}*/
+		rc_usleep(1000);
+	}
 
 	//Exit
 	rc_led_cleanup();
@@ -282,6 +274,8 @@ void on_mode_press()
 	{
 		status_ros = RESTARTING;
 		stop_ros();
+		//Pudiera enviarse para que el main loop lo empiece despues 
+		// sino, puede que no tengamos oportunidad de usar LEDs
 		rc_usleep(1000); 
 		start_ros();
 	}
@@ -376,10 +370,10 @@ void start_ros()
 {
 
 	// Reiniciar servicio
-	start_service(TF);
+	/*start_service(TF);
 
 	if (check_service(TF) == 1)
-	{
+	*/if (1) {
 		led_on(RED);
 		status_ros = STARTED;
 
@@ -395,10 +389,10 @@ void stop_ros()
 	* Fija el LED
 	* Detiene el servicio
 	*/
-	stop_service(TF);
+	/*stop_service(TF);
 	// Realmente abajo
 	if (check_service(TF)==0)
-	{
+	*/if (1) {
 		
 		led_hr(GREEN);
 		led_hr(RED);
@@ -417,10 +411,10 @@ void start_javabot()
 	* Corre servicio Javabot
 	* Pone LED GREEN en blink4
 	*/
-	start_service(TF);
+	/*start_service(TF);
 
-	if (check_service(TF))
-	{
+	if (check_service(TF) == 1)
+	*/if (1) {
 		led_blink4(GREEN);
 		status_javabot = STARTED;
 	} else {
@@ -438,8 +432,8 @@ void stop_javabot()
 	*/
 	stop_service(JavaBot);
 	
-	if (check_service(JavaBot)==0) // Realmente abajo
-	{	
+	/*if (check_service(JavaBot)==0) // Realmente abajo
+	*/if (1) {	
 		
 		led_off(GREEN);
 		status_javabot = STOPPED;
@@ -460,8 +454,8 @@ void start_teleop()
 	*/
 	start_service(TeleOp);
 
-	if (check_service(TeleOp)==1)
-	{
+	/*if (check_service(TeleOp)==1)
+	*/if (1) {
 		led_blink2(GREEN);
 		status_teleop = STARTED;
 	} else {
@@ -479,8 +473,8 @@ void stop_teleop()
 	*/
 	stop_service(TeleOp);
 	// Realmente abajo
-	if (check_service(TeleOp)==0)
-	{
+	/*if (check_service(TeleOp)==0)
+	*/if (1) {
 		
 		led_on(GREEN);
 		status_teleop = STOPPED;
@@ -582,18 +576,72 @@ void led_on(rc_led_t LED)
 void process_leds()
 {
 	// Como se encienden los leds?
+	switch (led_green)
+	{
+		case HR:
+			led_red = HR;
+			break;
+		case ON:
+			on(GREEN);
+			break;
+		case OFF:
+			off(GREEN);
+			break;
+		case BLINK2:
+			blink2();
+			break;
+		case BLINK4()
+			blink4();
+			break;
+		default: 
+			off(GREEN);
+		
+	}
 
+	switch (led_red)
+	{
+		case HR:
+			led_green = HR;
+			heart_rate();
+			break;
+		case ON:
+			on(RED);
+			break;
+		case OFF:
+			off(RED);
+			break;
+		case BLINK2:
+			blink2();
+			break;
+		case BLINK4()
+			blink4();
+			break;
+		default: 
+			off(RED);
+		
+	}
 
 }
 void blink2()
 {
-
+	on(RC_LED_BAT25);
 }
 void blink4()
 {
-
+	on(RC_LED_BAT25);
 }
 void heart_rate()
 {	
+	on(GREEN);
+	on(RED);
+}
 
+void on(rc_led_t LED)
+{
+	rc_led_set(LED,1);
+}
+
+void off(rc_led_t LED)
+{
+	rc_led_set(LED,0);
 }
