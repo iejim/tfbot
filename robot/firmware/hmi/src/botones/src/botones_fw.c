@@ -11,6 +11,7 @@
 #include <sys/wait.h>
 #include <string.h>
 //#include <robotcontrol.h> // includes ALL Robot Control subsystems
+#include <rc/start_stop.h>
 #include <rc/button.h>
 #include <rc/led.h>
 #include <rc/time.h>
@@ -69,7 +70,7 @@ void stop_ros();
 
 // LEDS
 // Marcan los estados a usar de los LEDs
-void led_hr(rc_led_t LED);
+void led_hr();
 void led_blink2(rc_led_t LED);
 void led_blink4(rc_led_t LED);
 void led_off(rc_led_t LED);
@@ -96,8 +97,8 @@ status_t status_javabot = STOPPED;
 status_t status_teleop = STOPPED;
 status_t status_ros = STOPPED;
 
-rc_led_t GREEN = RC_LED_GREEN;
-rc_led_t RED = RC_LED_RED;
+#define GREEN RC_LED_GREEN;
+#define RED RC_LED_RED;
 
 led_status_t led_green = OFF;
 led_status_t led_red = OFF;
@@ -166,6 +167,7 @@ int main()
 	// printf("hold pause button down for 2 seconds to exit\n");
 
 	// Keep looping until state changes to EXITING
+	/*
 	rc_set_state(RUNNING);
 	while(rc_get_state()!=EXITING){
 		// do things based on the state
@@ -187,7 +189,7 @@ int main()
 		}
 		// always sleep at some point
 		rc_usleep(100000);
-	}
+	}*/
 
 	//Exit
 	rc_led_cleanup();
@@ -220,7 +222,7 @@ void on_pause_release()
 		return;
 
 	stop_javabot();
-
+}
 /**
  * Arrancar Javabot, si no esta corriendo
  */
@@ -297,7 +299,7 @@ void check_main_processes()
 	// what to do with the return value?
 	int status = 0;
 
-	status = check_service(ST);
+	// status = check_service(ST);
 
 }
 
@@ -356,9 +358,18 @@ int check_service(const char* service)
 	return -1;
 }
 
-void start_service(const char* service);
-void restart_service(const char* service);
-void stop_service(const char* service);
+void start_service(const char* service)
+{
+
+}
+void restart_service(const char* service)
+{
+
+}
+void stop_service(const char* service)
+{
+	
+}
 
 
 void start_ros()
@@ -483,24 +494,12 @@ void stop_teleop()
 }
 
 
-void led_hr(rc_led_t LED)
+void led_hr()
 {
-	// Usar Switch para leer mejor y poder expandir
-	switch (LED)
-	{
-		case GREEN:
-			led_green = HR;
-			break;
-		
-		case RED:
-			led_red = HR;
-			break;
-
-		default:
-			// For now, fail silently
-			// perror("LED no reconocido");
-	}
+	led_green = HR;
+	led_red = HR;
 }
+
 void led_blink2(rc_led_t LED)
 {
 	// Usar Switch para leer mejor y poder expandir
@@ -517,6 +516,7 @@ void led_blink2(rc_led_t LED)
 		default:
 			// For now, fail silently
 			// perror("LED no reconocido");
+			break;
 	}
 }
 void led_blink4(rc_led_t LED)
@@ -535,6 +535,7 @@ void led_blink4(rc_led_t LED)
 		default:
 			// For now, fail silently
 			// perror("LED no reconocido");
+			break;
 	}
 }
 void led_off(rc_led_t LED)
@@ -552,6 +553,7 @@ void led_off(rc_led_t LED)
 		default:
 			// For now, fail silently
 			// perror("LED no reconocido");
+			break;
 	}
 }
 
@@ -570,6 +572,7 @@ void led_on(rc_led_t LED)
 		default:
 			// For now, fail silently
 			// perror("LED no reconocido");
+			break;
 	}
 }
 
@@ -582,6 +585,15 @@ void process_leds()
 
 
 }
-void blink2();
-void blink4();
-void heart_rate();
+void blink2()
+{
+
+}
+void blink4()
+{
+
+}
+void heart_rate()
+{	
+
+}

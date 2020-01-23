@@ -178,7 +178,7 @@ target_link_libraries(watchdog_tfbot
   m
   rt
   robotcontrol
-# )
+ )
 
 #############
 ## Install ##
