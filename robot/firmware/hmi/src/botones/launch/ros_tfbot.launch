@@ -1,0 +1,7 @@
+<launch>
+    <group ns="$(optenv ROBOT)">
+        <node name="Servos_fw" pkg="servos" type="servos_nodo" output="screen" required="true"/>
+        <node name="Sabertooth_fw" pkg="sabertooth" type="sabertooth_nodo" output="screen" required="true"/>
+        <node name="LEDs_Control" pkg="leds_control" type="leds_control_nodo" output="screen" required="true"/>
+    </group>
+</launch>

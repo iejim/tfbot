@@ -10,7 +10,21 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <string.h>
-#include <robotcontrol.h> // includes ALL Robot Control subsystems
+//#include <robotcontrol.h> // includes ALL Robot Control subsystems
+#include <rc/button.h>
+#include <rc/led.h>
+#include <rc/time.h>
+
+
+#define PRESS_TIMEOUT_US 1500000 // button held for 1.5s seconds
+#define PRESS_CHECK_US   100000  // check every 1/10 second
+
+
+typedef enum status_t {
+	RUNNING,
+	STOPPED,
+	RESTARTING
+} status_t;
 
 // function declarations
 
@@ -24,8 +38,11 @@ void on_pause_release();
 // Pressed once, MODE starts / stops TeleOp (an LED should signal it)
 void on_mode_release();
 
-//Pressed for 2 seconds, MODE restarts ROS and services
+//Pressed for 2 seconds, MODE restarts ROS and useful nodes
 void on_mode_press();
+
+int press_wait();
+
 
 void check_main_processes();
 int check_service(const char* service);
@@ -35,14 +52,43 @@ void restart_service(const char* service);
 void stop_service(const char* service);
 
 
+
+void start_javabot();
+void stop_javabot();
+
+void start_teleop();
+void stop_teleop();
+
+void start_ros();
+void stop_ros();
+
+// LEDS
+
+void led_hr(rc_led_t LED);
+void led_blink2(rc_led_t LED);
+void led_blink4(rc_led_t LED);
+void led_off(rc_led_t LED);
+void led_on(rc_led_t LED);
+
+
 // Main Services
-const char ST[] = "ros_sabertooth";
-const char Leds[] = "ros_leds";
-const char Servos[] = "ros_servos";
+const char TF[] = "ros_tfbot";
+// const char ST[] = "ros_sabertooth";
+// const char Leds[] = "ros_leds";
+// const char Servos[] = "ros_servos";
 
 // Runnable
 const char JavaBot[] = "ros_javabot";
 const char TeleOp[] = "ros_teleop";
+
+// Status
+status_t status_javabot = STOPPED;
+status_t status_teleop = STOPPED;
+status_t status_ros = STOPPED;
+
+rc_led_t GREEN = RC_LED_GREEN;
+rc_led_t RED = RC_LED_RED;
+
 
 /**
  * This template contains these critical components
@@ -93,6 +139,16 @@ int main()
 	// make our own safely.
 	rc_make_pid_file();
 
+	// start with both LEDs off
+	if(rc_led_set(RC_LED_GREEN, 0)==-1){
+			fprintf(stderr, "ERROR in rc_blink, failed to set RC_LED_GREEN\n");
+			return -1;
+	}
+	if(rc_led_set(RC_LED_RED, 0)==-1){
+			fprintf(stderr, "ERROR in rc_blink, failed to set RC_LED_RED\n");
+			return -1;
+	}
+
 
 	// printf("\nPress and release pause button to turn green LED on and off\n");
 	// printf("hold pause button down for 2 seconds to exit\n");
@@ -121,7 +177,8 @@ int main()
 		rc_usleep(100000);
 	}
 
-	//Exit 
+	//Exit
+	rc_led_cleanup();
 	rc_button_cleanup();	// stop button handlers
 	rc_remove_pid_file();	// remove pid file LAST
 	return 0;
@@ -133,29 +190,76 @@ int main()
  */
 void on_pause_release()
 {
-	if(rc_get_state()==RUNNING)	rc_set_state(PAUSED);
-	else if(rc_get_state()==PAUSED)	rc_set_state(RUNNING);
-	return;
-}
+	if (status_javabot != RUNNING)
+		return;
+
+	stop_javabot();
 
 /**
- * If the user holds the pause button for 2 seconds, set state to EXITING which
- * triggers the rest of the program to exit cleanly.
+ * Arrancar Javabot, si no esta corriendo
  */
 void on_pause_press()
 {
-	int i;
-	const int samples = 100; // check for release 100 times in this period
-	const int us_wait = 2000000; // 2 seconds
+	// Salir si no se agota el tiempo
+	if (!press_wait())
+		return;
 
-	// now keep checking to see if the button is still held down
-	for(i=0;i<samples;i++){
-		rc_usleep(us_wait/samples);
-		if(rc_button_get_state(RC_BTN_PIN_PAUSE)==RC_BTN_STATE_RELEASED) return;
+	if (status_javabot == RUNNING)
+	{	
+		return; // No hacer caso
+
+	} else if (status_javabot == STOPPED)
+	{
+		if (status_teleop == RUNNING)
+		{
+			stop_teleop();
+		}
+
+		start_javabot();
 	}
-	printf("long press detected, shutting down\n");
-	rc_set_state(EXITING);
-	return;
+	
+
+}
+
+// Toggle Teleop Status
+void on_mode_release()
+{
+	switch (status_teleop)
+	{
+	case RUNNING:
+
+		stop_teleop();
+		break;
+
+	case STOPPED:
+		
+		start_teleop();
+		break;
+
+	case RESTARTING:
+
+	default:
+		break;
+	}
+}
+
+void on_mode_press()
+{
+	// Salir si no se agota el tiempo
+	if (!press_wait())
+		return;
+
+	// Revisar status del servicio
+	if (status_ros == RUNNING) // Y si simplemente forzamos?
+	{
+		status_ros = RESTARTING;
+		stop_ros();
+		rc_usleep(1000); 
+		start_ros();
+	}
+
+
+	
 }
 
 /**
@@ -168,10 +272,6 @@ void check_main_processes()
 	int status = 0;
 
 	status = check_service(ST);
-	
-	status = check_service(Servos);
-	
-	status = check_service(Leds);
 
 }
 
@@ -179,7 +279,7 @@ int check_service(const char* service)
 {
 	pid_t pid = 0;
 	int pipefd[2];
-	FILE* output;
+	FILE* output; 
 	char line[256];
 	int status;
 
@@ -199,6 +299,7 @@ int check_service(const char* service)
 	if (WIFEXITED(status))
 	{
 		close(pipefd[1]);
+		
 		output = fdopen(pipefd[0], "r");
 
 		if(fgets(line, sizeof(line), output)) //listen to what tail writes to its standard output
@@ -219,9 +320,147 @@ int check_service(const char* service)
 			perror("Error leyendo estado del servicio");
 			return -2; // Error reading output
 		}
+
 	} else {
 		perror("No se pudo leer el estado del servicio.");
 	}
 	// Forked child EXITED weirdly
 	return -1;
+}
+
+
+int press_wait()
+{
+	int i=0;
+	const int samples = PRESS_TIMEOUT_US/PRESS_CHECK_US;
+	// now keep checking to see if the button is still held down
+	for(i=0;i<samples;i++){
+		rc_usleep(PRESS_CHECK_US);
+		if(rc_button_get_state(RC_BTN_PIN_PAUSE)==RC_BTN_STATE_RELEASED){
+				return 0;
+		}
+	}
+	// Time has run out
+	return 1;
+}
+
+void start_ros()
+{
+
+	// Reiniciar servicio
+	start_service(TF);
+
+	if (check_service(TF) == 1)
+	{
+		led_on(RED);
+		status_ros = RUNNING;
+
+	} else {
+		led_hr();
+		status_ros = STOPPED;
+	}
+}
+
+void stop_ros()
+{
+	/*
+	* Fija el LED
+	* Detiene el servicio
+	*/
+	stop_service(TF);
+	// Realmente abajo
+	if (check_service(TF)==0)
+	{
+		
+		led_hr(GREEN);
+		led_hr(RED);
+		status_ros = STOPPED;
+
+	} else {
+
+		status_ros = RUNNING;
+		led_on(RED);
+	}
+}
+
+void start_javabot()
+{
+	/*
+	* Corre servicio Javabot
+	* Pone LED GREEN en blink4
+	*/
+	start_service(TF);
+
+	if (check_service(TF))
+	{
+		led_blink4(GREEN);
+		status_javabot = RUNNING;
+	} else {
+		status_javabot = STOPPED;
+		led_off(GREEN);
+	}
+
+}
+
+void stop_javabot()
+{
+	/*
+	* Apaga el LED
+	* Detiene el servicio
+	*/
+	stop_service(JavaBot);
+	
+	if (check_service(JavaBot)==0) // Realmente abajo
+	{	
+		
+		led_off(GREEN);
+		status_javabot = STOPPED;
+
+	} else {
+		// No se detuvo, simular que corre
+		status_javabot = RUNNING;
+		led_blink4(GREEN);
+	}
+	
+}
+
+void start_teleop()
+{
+	/*
+	* Corre servicio Teleop
+	* Pone LED GREEN en blink2
+	*/
+	start_service(TeleOp);
+
+	if (check_service(TeleOp)==1)
+	{
+		led_blink2(GREEN);
+		status_teleop = RUNNING;
+	} else {
+		status_teleop = STOPPED;
+		led_off(GREEN);
+	}
+
+}
+
+void stop_teleop()
+{
+	/*
+	* Fija el LED
+	* Detiene el servicio
+	*/
+	stop_service(TeleOp);
+	// Realmente abajo
+	if (check_service(TeleOp)==0)
+	{
+		
+		led_on(GREEN);
+		status_teleop = STOPPED;
+
+	} else {
+
+		status_teleop = RUNNING;
+		led_blink2(GREEN);
+	}
+	
 }

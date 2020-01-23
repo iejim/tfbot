@@ -1,6 +1,6 @@
 [Unit]
 Description=ROS LED control service
-Requires=systemd-modules-load.service
+Requires=ros_roscore.service
 #After=robotcontrol.service
 Wants=multi-user.target
 

@@ -1,6 +1,6 @@
 [Unit]
 Description=ROS Servos Root
-Requires=systemd-modules-load.service
+Requires=ros_roscore.service
 #After=ros_sabertooth.service
 Wants=multi-user.target
 

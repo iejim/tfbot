@@ -1,0 +1,15 @@
+[Unit]
+Description=Watchdog and Button Interface
+Requires=systemd-modules-load.service
+#After=ros_sabertooth.service
+#Wants=multi-user.target
+
+[Service]
+#User=ubuntu
+PIDFile=/run/tfbot/ros_servos.pid
+#ExecStartPre=/usr/bin/rc_startup_routine
+ExecStart=-/opt/tfbot/scripts/runner_servos.sh
+#ExecStop=/usr/bin/rc_kill
+
+[Install]
+WantedBy=multi-user.target

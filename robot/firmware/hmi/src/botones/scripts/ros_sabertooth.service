@@ -1,6 +1,6 @@
 [Unit]
 Description=ROS Sabertooth Root
-Requires=systemd-modules-load.service
+Requires=ros_roscore.service
 #After=ros_teleop.service
 Wants=multi-user.target
 
