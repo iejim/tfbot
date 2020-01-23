@@ -26,20 +26,25 @@ typedef enum status_t {
 	RESTARTING
 } status_t;
 
+typedef enum led_status_t {
+	ON,
+	OFF,
+	HR,
+	BLINK2,
+	BLINK4
+} led_status_t;
+
 // function declarations
 
 // Pressed for 2 seconds, PAUSE starts JavaBot
 // TODO could be that it really "pauses it" (how to communicate with ros?? CLI command?)
 void on_pause_press();
-
 // Presed once, PAUSE stops JavaBot
 void on_pause_release();
-
-// Pressed once, MODE starts / stops TeleOp (an LED should signal it)
-void on_mode_release();
-
 //Pressed for 2 seconds, MODE restarts ROS and useful nodes
 void on_mode_press();
+// Pressed once, MODE starts / stops TeleOp (an LED should signal it)
+void on_mode_release();
 
 int press_wait();
 
@@ -63,13 +68,18 @@ void start_ros();
 void stop_ros();
 
 // LEDS
-
+// Marcan los estados a usar de los LEDs
 void led_hr(rc_led_t LED);
 void led_blink2(rc_led_t LED);
 void led_blink4(rc_led_t LED);
 void led_off(rc_led_t LED);
 void led_on(rc_led_t LED);
 
+// Procesa los estados de los leds y actua acorde
+void process_leds();
+void blink2();
+void blink4();
+void heart_rate(); // affects both LEDs
 
 // Main Services
 const char TF[] = "ros_tfbot";
@@ -89,6 +99,8 @@ status_t status_ros = STOPPED;
 rc_led_t GREEN = RC_LED_GREEN;
 rc_led_t RED = RC_LED_RED;
 
+led_status_t led_green = OFF;
+led_status_t led_red = OFF;
 
 /**
  * This template contains these critical components
@@ -184,6 +196,20 @@ int main()
 	return 0;
 }
 
+int press_wait()
+{
+	int i=0;
+	const int samples = PRESS_TIMEOUT_US/PRESS_CHECK_US;
+	// now keep checking to see if the button is still held down
+	for(i=0;i<samples;i++){
+		rc_usleep(PRESS_CHECK_US);
+		if(rc_button_get_state(RC_BTN_PIN_PAUSE)==RC_BTN_STATE_RELEASED){
+				return 0;
+		}
+	}
+	// Time has run out
+	return 1;
+}
 
 /**
  * Make the Pause button toggle between paused and running states.
@@ -275,6 +301,8 @@ void check_main_processes()
 
 }
 
+
+
 int check_service(const char* service)
 {
 	pid_t pid = 0;
@@ -328,21 +356,10 @@ int check_service(const char* service)
 	return -1;
 }
 
+void start_service(const char* service);
+void restart_service(const char* service);
+void stop_service(const char* service);
 
-int press_wait()
-{
-	int i=0;
-	const int samples = PRESS_TIMEOUT_US/PRESS_CHECK_US;
-	// now keep checking to see if the button is still held down
-	for(i=0;i<samples;i++){
-		rc_usleep(PRESS_CHECK_US);
-		if(rc_button_get_state(RC_BTN_PIN_PAUSE)==RC_BTN_STATE_RELEASED){
-				return 0;
-		}
-	}
-	// Time has run out
-	return 1;
-}
 
 void start_ros()
 {
@@ -464,3 +481,107 @@ void stop_teleop()
 	}
 	
 }
+
+
+void led_hr(rc_led_t LED)
+{
+	// Usar Switch para leer mejor y poder expandir
+	switch (LED)
+	{
+		case GREEN:
+			led_green = HR;
+			break;
+		
+		case RED:
+			led_red = HR;
+			break;
+
+		default:
+			// For now, fail silently
+			// perror("LED no reconocido");
+	}
+}
+void led_blink2(rc_led_t LED)
+{
+	// Usar Switch para leer mejor y poder expandir
+	switch (LED)
+	{
+		case GREEN:
+			led_green = BLINK2;
+			break;
+		
+		case RED:
+			led_red = BLINK2;
+			break;
+
+		default:
+			// For now, fail silently
+			// perror("LED no reconocido");
+	}
+}
+void led_blink4(rc_led_t LED)
+{
+	// Usar Switch para leer mejor y poder expandir
+	switch (LED)
+	{
+		case GREEN:
+			led_green = BLINK4;
+			break;
+		
+		case RED:
+			led_red = BLINK4;
+			break;
+
+		default:
+			// For now, fail silently
+			// perror("LED no reconocido");
+	}
+}
+void led_off(rc_led_t LED)
+{
+	switch (LED)
+	{
+		case GREEN:
+			led_green = OFF;
+			break;
+		
+		case RED:
+			led_red = OFF;
+			break;
+
+		default:
+			// For now, fail silently
+			// perror("LED no reconocido");
+	}
+}
+
+void led_on(rc_led_t LED)
+{
+	switch (LED)
+	{
+		case GREEN:
+			led_green = ON;
+			break;
+		
+		case RED:
+			led_red = ON;
+			break;
+
+		default:
+			// For now, fail silently
+			// perror("LED no reconocido");
+	}
+}
+
+/* Processes each LED according to its status. 
+ * This runs in the Spinning loop of the program.
+ */ 
+void process_leds()
+{
+	// Como se encienden los leds?
+
+
+}
+void blink2();
+void blink4();
+void heart_rate();
