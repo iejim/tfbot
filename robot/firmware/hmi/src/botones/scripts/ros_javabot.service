@@ -1,8 +1,8 @@
 [Unit]
 Description=ROS Programable JavaBot 
 Requires=systemd-modules-load.service
-Requires=wd_botones.service
-BindsTo=wd_botones.service
+Requires=ros_tfbot.service
+BindsTo=ros_tfbot.service
 Conflicts=ros_teleop.service
 Wants=graphical.target
 

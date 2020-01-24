@@ -14,7 +14,7 @@ bbled="beaglebone:green:usr"
 # Pudiera ser un while para esperar que este arriba el SoftAp (para poder setear el led del Wifi)
 #sleep 2
 
-echo $Wifi > $dir/wifi/trigger
+# echo $Wifi > $dir/wifi/trigger
 echo $USR0 > $dir/${bbled}0/trigger
 echo $USR1 > $dir/${bbled}1/trigger
 echo $USR2 > $dir/${bbled}2/trigger

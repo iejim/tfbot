@@ -26,8 +26,10 @@
 #define B4_ON 50000/SPIN_PERIOD
 #define B4_OFF 250000/SPIN_PERIOD
 #define HR_ON 70000/SPIN_PERIOD
-#define HR_OFF 250000/SPIN_PERIOD
+#define HR_OFF 170000/SPIN_PERIOD
 #define HR_2ND 400000/SPIN_PERIOD
+
+#define SYSTEMD_RUNNING "running"
 
 typedef enum status_t {
 	STARTED,
@@ -72,7 +74,7 @@ int press_wait(int button);
 
 void check_main_processes();
 int check_service(const char* service);
-
+void systemctl_action(const char* action, const char* service);
 void start_service(const char* service);
 void restart_service(const char* service);
 void stop_service(const char* service);
@@ -81,12 +83,20 @@ void stop_service(const char* service);
 
 void start_javabot();
 void stop_javabot();
+void javabot_is_up();
+void javabot_is_down();
 
 void start_teleop();
 void stop_teleop();
+void teleop_is_up();
+void teleop_is_down();
 
 void start_ros();
 void stop_ros();
+void ros_is_up();
+void ros_is_up();
+
+
 
 // LEDS
 // Marcan los estados a usar de los LEDs
@@ -205,6 +215,7 @@ int main()
 		spin();
 	}
 
+	stop_ros();
 	//Exit
 	off(GREEN);
 	off(RED);
@@ -373,7 +384,25 @@ void check_main_processes()
 	// what to do with the return value?
 	int status = 0;
 
-	// status = check_service(ST);
+	status = check_service(TF);
+	if (status == 1)
+		status_ros = STARTED;
+	else
+		status_ros = STOPPED;
+
+	status = 0;
+	status = check_service(JavaBot);
+	if (status == 1)
+		status_javabot = STARTED;
+	else
+		status_javabot = STOPPED;
+
+	status = 0;
+	status = check_service(TeleOp);
+	if (status == 1)
+		status_teleop = STARTED;
+	else
+		status_teleop = STOPPED;
 
 }
 
@@ -395,29 +424,42 @@ int check_service(const char* service)
 		close(pipefd[0]);
 		dup2(pipefd[1], STDOUT_FILENO);
 		// dup2(pipefd[1], STDERR_FILENO);
+		
 		execlp("systemctl", "systemctl", "show", "--property=SubState", service, (char*)NULL);
 	}
 
 	//Only parent gets here. Listen to what the tail says
 	waitpid(pid, &status, 0);
+	fprintf(stdout, "Listo para revisar\n");
+
 	if (WIFEXITED(status))
 	{
 		close(pipefd[1]);
 		
 		output = fdopen(pipefd[0], "r");
-
+		fprintf(stdout, "Revisando\n");
 		if(fgets(line, sizeof(line), output)) //listen to what tail writes to its standard output
 		{
+			fprintf(stdout, "Leyendo salida: %s\n", line);
+
 			char* tok;
 			tok = strtok(line,"=");
 			if (strcmp(tok, "SubState")==0) //First check
 			{
 				tok = strtok(NULL,"=");
-				
-				if (strcmp(tok, "STARTED")==0) //Final check
+				fprintf(stdout, "Leyendo estado.\n");
+				int val = strcmp(tok, "running");
+				if (val==0) //Final check
 				{
+					fprintf(stderr, "Confirmado corriendo: %s is %s\n", service, tok);
 					return 1;
-				} else { // Not STARTED
+				} else { // Not Running
+					fprintf(stderr, "No esta corriendo: %s is %s (%i)\n", service , tok, val);
+					// char sys = SYSTEMD_RUNNING;
+					// for (int i=0; i<sizeof(tok); i++)
+					// {
+					// 	frpintf(stderr, "%#x -> %#x", tok[i], )
+					// }
 					return 0;
 				}
 			}
@@ -432,10 +474,10 @@ int check_service(const char* service)
 	return -1;
 }
 
-void start_service(const char* service)
-{
+void systemctl_action(const char* action, const char* service){
 	pid_t pid = 0;
 	int pipefd[2];
+	int status;
 
 	pipe(pipefd); //create a pipe
 	pid = fork(); //span a child process
@@ -445,66 +487,58 @@ void start_service(const char* service)
 		// close(pipefd[0]);
 		// dup2(pipefd[1], STDOUT_FILENO);
 		// dup2(pipefd[1], STDERR_FILENO);
-		execlp("systemctl", "systemctl", "start", service, (char*)NULL);
+		execlp("systemctl", "systemctl", action, service, (char*)NULL);
 	}
 
 	//Only parent gets here. The rest stays running?
+	
+	// Wait for the command to exit. It's quick.
+	waitpid(pid, &status, 0);
+
+}
+void start_service(const char* service)
+{
+	systemctl_action("start", service);
 	
 }
 void restart_service(const char* service)
 {
-	pid_t pid = 0;
-	int pipefd[2];
+	systemctl_action("restart", service);
 
-	pipe(pipefd); //create a pipe
-	pid = fork(); //span a child process
-	if (pid == 0) // When 0, the child is doing the work.
-	{
-		// Child. Let's redirect its standard output to our pipe and replace process with tail
-		// close(pipefd[0]);
-		// dup2(pipefd[1], STDOUT_FILENO);
-		// dup2(pipefd[1], STDERR_FILENO);
-		execlp("systemctl", "systemctl", "restart", service, (char*)NULL);
-	}
-
-	//Only parent gets here. The rest stays running?
 }
 void stop_service(const char* service)
 {
-	pid_t pid = 0;
-	int pipefd[2];
+	systemctl_action("stop", service);
 
-	pipe(pipefd); //create a pipe
-	pid = fork(); //span a child process
-	if (pid == 0) // When 0, the child is doing the work.
-	{
-		// Child. Let's redirect its standard output to our pipe and replace process with tail
-		// close(pipefd[0]);
-		// dup2(pipefd[1], STDOUT_FILENO);
-		// dup2(pipefd[1], STDERR_FILENO);
-		execlp("systemctl", "systemctl", "stop", service, (char*)NULL);
-	}
-
-	//Only parent gets here. The rest stays running?
 }
 
+void ros_is_up()
+{
+	led_on(RED);
+	led_off(GREEN);
+	status_ros = STARTED;
+}
+
+void ros_is_down()
+{
+	led_hr();
+	status_ros = STOPPED;
+}
 
 void start_ros()
 {
-	fprintf(stdout, "Start Ros\n");
+	fprintf(stdout, "Starting Ros\n");
 
 	// Reiniciar servicio
 	start_service(TF);
+	fprintf(stdout, "Checking if Ros started\n");
 	
 	if (check_service(TF) == 1)
 	{
-		led_on(RED);
-		led_off(GREEN);
-		status_ros = STARTED;
+		ros_is_up();
 
 	} else {
-		led_hr();
-		status_ros = STOPPED;
+		ros_is_down();
 	}
 }
 
@@ -516,10 +550,10 @@ void stop_ros()
 	* Fija el LED
 	* Detiene el servicio
 	*/
-	/*stop_service(TF);
+	stop_service(TF);
 	// Realmente abajo
-	if (check_service(TF)==0)
-	*/if (1) {
+	/*if (check_service(TF)==0)
+	{
 		
 		led_hr();
 		status_ros = STOPPED;
@@ -532,7 +566,20 @@ void stop_ros()
 
 		status_ros = STARTED;
 		led_on(RED);
-	}
+	}*/
+}
+
+
+void javabot_is_up()
+{
+	led_blink4(GREEN);
+	status_javabot = STARTED;
+}
+
+void javabot_is_down()
+{
+	status_javabot = STOPPED;
+	led_off(GREEN);
 }
 
 void start_javabot()
@@ -547,11 +594,9 @@ void start_javabot()
 
 	if (check_service(TF) == 1)
 	*/if (1) {
-		led_blink4(GREEN);
-		status_javabot = STARTED;
+		javabot_is_up();
 	} else {
-		status_javabot = STOPPED;
-		led_off(GREEN);
+		javabot_is_down();
 	}
 
 }
@@ -581,6 +626,18 @@ void stop_javabot()
 	
 }
 
+void teleop_is_up()
+{
+	led_blink2(GREEN);
+	status_teleop = STARTED;
+}
+
+void teleop_is_down()
+{
+	status_teleop = STOPPED;
+	led_on(GREEN);
+}
+
 void start_teleop()
 {
 	/*
@@ -593,11 +650,9 @@ void start_teleop()
 
 	/*if (check_service(TeleOp)==1)
 	*/if (1) {
-		led_blink2(GREEN);
-		status_teleop = STARTED;
+		teleop_is_up();
 	} else {
-		status_teleop = STOPPED;
-		led_off(GREEN);
+		teleop_is_down();
 	}
 
 }
