@@ -225,6 +225,7 @@ install(FILES
 
 install(FILES
   scripts/runner_tfbot.sh
+  scripts/default_leds.sh
   # myfile2
   DESTINATION /opt/tfbot/scripts
   PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_WRITE WORLD_READ WORLD_EXECUTE
@@ -233,6 +234,13 @@ install(FILES
 install(FILES
   scripts/wd_botones.service
   scripts/ros_tfbot.service
+  scripts/ros_javabot.service
+  scripts/ros_teleop.service
+
+  # scripts/ros_sabertooth.service
+  # scripts/ros_servos.service
+  # scripts/ros_leds.service
+
   # myfile2
   DESTINATION /opt/tfbot/services
 )

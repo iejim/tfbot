@@ -4,6 +4,7 @@ Requires=systemd-modules-load.service
 Requires=wd_botones.service
 BindsTo=wd_botones.service
 Conflicts=ros_javabot.service
+Wants=graphical.target
 
 [Service]
 User=ubuntu
@@ -13,4 +14,4 @@ ExecStart=-/opt/tfbot/scripts/runner_teleop.sh
 #ExecStop=/usr/bin/rc_kill
 
 [Install]
-WantedBy=wd_botones.service
+#WantedBy=wd_botones.service
