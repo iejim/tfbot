@@ -16,5 +16,5 @@ ExecStart=-/opt/tfbot/scripts/runner_tfbot.sh
 #ExecStop=/usr/bin/rc_kill
 
 [Install]
-WantedBy=graphical.target
+#WantedBy=graphical.target
 #WantedBy=multi-user.target

@@ -226,6 +226,7 @@ install(FILES
 install(FILES
   scripts/runner_tfbot.sh
   scripts/default_leds.sh
+  scripts/instalar_servicios.sh
   # myfile2
   DESTINATION /opt/tfbot/scripts
   PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_WRITE WORLD_READ WORLD_EXECUTE
