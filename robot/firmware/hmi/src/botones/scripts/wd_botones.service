@@ -9,7 +9,7 @@ Before=bb-wl18xx-wlan0.service
 PIDFile=/run/tfbot/wd_botones.pid
 # Pudiera ser la que setea los LEDs
 ExecStartPre=-/opt/tfbot/scripts/default_leds.sh
-ExecStart=/opt/tfbot/share/botones/watchdog_tfbot
+ExecStart=/opt/tfbot/lib/botones/watchdog_tfbot
 #ExecStop=/usr/bin/rc_kill
 
 [Install]

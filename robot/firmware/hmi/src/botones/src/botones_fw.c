@@ -494,10 +494,10 @@ void start_ros()
 	fprintf(stdout, "Start Ros\n");
 
 	// Reiniciar servicio
-	/*start_service(TF);
+	start_service(TF);
 	
 	if (check_service(TF) == 1)
-	*/if (1) {
+	{
 		led_on(RED);
 		led_off(GREEN);
 		status_ros = STARTED;
