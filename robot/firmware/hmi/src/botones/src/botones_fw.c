@@ -228,7 +228,7 @@ int main()
 
 void spin()
 {
-	check_main_processes();
+	// check_main_processes();
 	process_leds();
 
 	rc_usleep(SPIN_PERIOD);
