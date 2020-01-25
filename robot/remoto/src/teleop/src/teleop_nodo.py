@@ -5,14 +5,20 @@ from time import sleep
 from tfbot_msgs.msg import gamepad
 from std_msgs.msg import String
 from tfbot_msgs.msg import drivetrain
+from tfbot_msgs.msg import servos_cmd
 
-# class drivetrain:
+# Miembros Mensaje drivetrain
+# drivetrain:
 #   nombre = ""
 #   cmd1_izq = 0
 #   cmd2_der = 0
 
+
+
 SEC_NO_CONTROL = 2 #Segundos sin control
 ESPERA_HZ = 5 # Frecuencia de espera (para no dejarlo solo)
+CANAL_SERVO_IZQ = 7
+CANAL_SERVO_DER = 8
 
 class TeleOpNode(object):
 
@@ -21,15 +27,19 @@ class TeleOpNode(object):
   _topico_gamepad = "gamepad_control"
   _topico_control = "control_nodos"
   _topico_drivetrain = "comando_drivetrain"
+  _topico_servos = "comando_servos"
 
   #TODO: Usar namespace para topicos
   _ns = ""
 
   _pub_drivetrain = None
+  _pub_servos = None
   _sub_control = None
   _sub_gamepad = None
 
   _cmd_msg = None
+  _servos_msgR = None
+  _servos_msgL = None
 
   _no_estado = False
   _timer = None
@@ -39,6 +49,11 @@ class TeleOpNode(object):
     if nombre:
       self._nombre_nodo = nombre
     self._cmd_msg = drivetrain()
+    self._servos_msgL = servos_cmd()
+    self._servos_msgR = servos_cmd()
+
+    self._servos_msgL.canal = CANAL_SERVO_IZQ
+    self._servos_msgR.canal = CANAL_SERVO_DER
 
     
 
@@ -58,6 +73,7 @@ class TeleOpNode(object):
 
     # Crear publicador
     self._pub_drivetrain = rospy.Publisher(self._topico_drivetrain, drivetrain, queue_size=2)
+    self._pub_servos = rospy.Publisher(self._topico_servos, servos_cmd, queue_size=2)
 
     # Crear suscriptores
     self._sub_gamepad = rospy.Subscriber(self._topico_gamepad, gamepad, self.gamepad_callback)
@@ -88,6 +104,8 @@ class TeleOpNode(object):
       # print "L: %d; R: %d" % (data.lY, data.rY)
       msg.cmd1_izq = self.pad_a_drive(data.lY)
       msg.cmd2_der = self.pad_a_drive(data.rY)
+
+
 
       self._pub_drivetrain.publish(msg)
       # rospy.loginfo("Enviando %s" % repr(msg))
