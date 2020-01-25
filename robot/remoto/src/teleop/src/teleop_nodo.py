@@ -13,6 +13,10 @@ from tfbot_msgs.msg import servos_cmd
 #   cmd1_izq = 0
 #   cmd2_der = 0
 
+# Miembros Mensaje Servos
+# servos_cmd:
+#   canal = [1,8]
+#   cmd1 = [-100, 100]
 
 
 SEC_NO_CONTROL = 2 #Segundos sin control
