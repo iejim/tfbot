@@ -1,10 +1,3 @@
-/**
- * @file rc_project_template.c
- *
- * This is meant to be a skeleton program for Robot Control projects. Change
- * this description and file name before modifying for your own purpose.
- */
-
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -30,10 +23,11 @@
 #define HR_2ND 400000/SPIN_PERIOD
 
 #define SYSTEMD_RUNNING "running"
+#define SERVICE_CHECK_CYCLES 50 //1/2 second check 
 
 typedef enum status_t {
-	STARTED,
 	STOPPED,
+	STARTED,
 	RESTARTING
 } status_t;
 
@@ -163,21 +157,21 @@ int main()
 
 	// start signal handler so we can exit cleanly
 	if(rc_enable_signal_handler()==-1){
-		fprintf(stderr,"ERROR: failed to start signal handler\n");
+		// fprintf(stderr,"ERROR: failed to start signal handler\n");
 		return -1;
 	}
 
 	// initialize PAUSE button
 	if(rc_button_init(RC_BTN_PIN_PAUSE, RC_BTN_POLARITY_NORM_HIGH,
 						RC_BTN_DEBOUNCE_DEFAULT_US)){
-		fprintf(stderr,"ERROR: failed to initialize pause button\n");
+		// fprintf(stderr,"ERROR: failed to initialize pause button\n");
 		return -1;
 	}
 
 	// initialize MODE button
 	if(rc_button_init(RC_BTN_PIN_MODE, RC_BTN_POLARITY_NORM_HIGH,
 						RC_BTN_DEBOUNCE_DEFAULT_US)){
-		fprintf(stderr,"ERROR: failed to initialize mode button\n");
+		// fprintf(stderr,"ERROR: failed to initialize mode button\n");
 		return -1;
 	}
 
@@ -191,13 +185,14 @@ int main()
 	// make our own safely.
 	// rc_make_pid_file();
 
+
 	// start with both LEDs off
 	if(rc_led_set(RC_LED_GREEN, 0)==-1){
-			fprintf(stderr, "ERROR in rc_blink, failed to set RC_LED_GREEN\n");
+			// fprintf(stderr, "ERROR in rc_blink, failed to set RC_LED_GREEN\n");
 			return -1;
 	}
 	if(rc_led_set(RC_LED_RED, 0)==-1){
-			fprintf(stderr, "ERROR in rc_blink, failed to set RC_LED_RED\n");
+			// fprintf(stderr, "ERROR in rc_blink, failed to set RC_LED_RED\n");
 			return -1;
 	}
 
@@ -220,9 +215,6 @@ int main()
 	off(GREEN);
 	off(RED);
 
-	//Temp
-	off(RC_LED_BAT25);
-	off(RC_LED_BAT100);
 
 	rc_led_cleanup();
 	rc_button_cleanup();	// stop button handlers
@@ -260,7 +252,7 @@ int press_wait(int button)
 /**
  * Stops Javabot, if it was STARTED.
  */
-void on_pause_release()
+void on_mode_release()
 {
 	if(ignore_release)
 	{
@@ -268,28 +260,28 @@ void on_pause_release()
 		return;
 	}
 
-	fprintf(stdout, "PAU Released\n");
+	// fprintf(stdout, "PAU Released\n");
 	if (status_javabot != STARTED)
 		return;
-	fprintf(stdout, "JavaBot was STARTED\n");
+	// fprintf(stdout, "JavaBot was STARTED\n");
 	
 	stop_javabot();
 }
 /**
  * Arranca Javabot, si no estaba corriendo, y apaga Teleop, si estaba corriendo.
  */
-void on_pause_hold()
+void on_mode_hold()
 {
 	// Salir si no se agota el tiempo
-	if (!press_wait(PAUSE))
+	if (!press_wait(MODE))
 		return;
 
-	fprintf(stdout, "PAU Pressed\n");
+	// fprintf(stdout, "PAU Pressed\n");
 	ignore_release = 1;
 
 	if (status_javabot == STARTED)
 	{	
-		fprintf(stdout, "JavaBot Already STARTED\n");
+		// fprintf(stdout, "JavaBot Already STARTED\n");
 
 		return; // No hacer caso
 
@@ -297,10 +289,10 @@ void on_pause_hold()
 	{
 		if (status_teleop == STARTED)
 		{
-			fprintf(stdout, "Need to stop Teleop\n");
+			// fprintf(stdout, "Need to stop Teleop\n");
 			stop_teleop();
 		}
-		fprintf(stdout, "JavaBot was STOPPED\n");
+		// fprintf(stdout, "JavaBot was STOPPED\n");
 
 		start_javabot();
 	}
@@ -311,7 +303,7 @@ void on_pause_hold()
 /*
  * Cambia el status de Teleop entre STARTED y STOPPED.
  */
-void on_mode_release()
+void on_pause_release()
 {
 	if(ignore_release)
 	{
@@ -319,23 +311,23 @@ void on_mode_release()
 		return;
 	}
 
-	fprintf(stdout, "MODE Released\n");
+	// fprintf(stdout, "PAUSE Released\n");
 	
 	switch (status_teleop)
 	{
 	case STARTED:
-		fprintf(stdout, "Teleop is STARTED \n");
+		// fprintf(stdout, "Teleop is STARTED \n");
 		stop_teleop();
 		break;
 
 	case STOPPED:
-		fprintf(stdout, "Teleop is STOPPED\n");
+		// fprintf(stdout, "Teleop is STOPPED\n");
 		
 		start_teleop();
 		break;
 
 	case RESTARTING:
-		fprintf(stdout, "Lame Teleop\n");
+		// fprintf(stdout, "Lame Teleop\n");
 	default:
 		break;
 	}
@@ -345,29 +337,29 @@ void on_mode_release()
 /*
  * Forces the restart of ROS' TFBOT
  */
-void on_mode_hold()
+void on_pause_hold()
 {
 	// Salir si no se agota el tiempo
-	if (!press_wait(MODE))
+	if (!press_wait(PAUSE))
 		return;
 	
-	fprintf(stdout, "MODE HELD\n");
+	// fprintf(stdout, "PAUSE HELD\n");
 	ignore_release = 1;
 
 	// Revisar status del servicio
 	if (status_ros == STARTED) // Y si simplemente forzamos?
 	{
-		fprintf(stdout, "ROS already STARTED: RESTART\n");
+		// fprintf(stdout, "ROS already STARTED: RESTART\n");
 
 		status_ros = RESTARTING;
 		stop_ros();
 		//Pudiera enviarse para que el main loop lo empiece despues 
 		// sino, puede que no tengamos oportunidad de usar LEDs
-		rc_usleep(1000); 
-		start_ros();
+		// rc_usleep(100000); 
+		// start_ros();
 		return;
 	}
-	fprintf(stdout, "ROS was not STARTED: START\n");
+	// fprintf(stdout, "ROS was not STARTED: START\n");
 	
 	start_ros();
 
@@ -385,16 +377,23 @@ void check_main_processes()
 	int status = 0;
 
 	status = check_service(TF);
-	if (status == 1)
-		status_ros = STARTED;
-	else
-		status_ros = STOPPED;
-
-	status = 0;
+	if (status == STARTED && status_ros != STARTED ) // Previously down, but running
+	{
+		ros_is_up();
+	}
+	else if (status == STOPPED && status_ros == RESTARTING) //Dead, marked for restart
+	{
+		start_ros();
+	} else {
+		ros_is_down();
+	}
+	/*status = 0;
 	status = check_service(JavaBot);
 	if (status == 1)
+	{	
 		status_javabot = STARTED;
-	else
+		javabot_is_up();
+	}else
 		status_javabot = STOPPED;
 
 	status = 0;
@@ -403,6 +402,7 @@ void check_main_processes()
 		status_teleop = STARTED;
 	else
 		status_teleop = STOPPED;
+		*/
 
 }
 
@@ -430,36 +430,31 @@ int check_service(const char* service)
 
 	//Only parent gets here. Listen to what the tail says
 	waitpid(pid, &status, 0);
-	fprintf(stdout, "Listo para revisar\n");
+	// fprintf(stdout, "Listo para revisar\n");
 
 	if (WIFEXITED(status))
 	{
 		close(pipefd[1]);
 		
 		output = fdopen(pipefd[0], "r");
-		fprintf(stdout, "Revisando\n");
+		// fprintf(stdout, "Revisando\n");
 		if(fgets(line, sizeof(line), output)) //listen to what tail writes to its standard output
 		{
-			fprintf(stdout, "Leyendo salida: %s\n", line);
+			// fprintf(stdout, "Leyendo salida: %s\n", line);
 
 			char* tok;
 			tok = strtok(line,"=");
 			if (strcmp(tok, "SubState")==0) //First check
 			{
-				tok = strtok(NULL,"=");
-				fprintf(stdout, "Leyendo estado.\n");
-				int val = strcmp(tok, "running");
+				tok = strtok(NULL,"\n");
+				// fprintf(stdout, "Leyendo estado.\n");
+				int val = strcmp(tok, SYSTEMD_RUNNING);
 				if (val==0) //Final check
 				{
-					fprintf(stderr, "Confirmado corriendo: %s is %s\n", service, tok);
+					// fprintf(stderr, "Confirmado corriendo: %s is %s\n", service, tok);
 					return 1;
 				} else { // Not Running
-					fprintf(stderr, "No esta corriendo: %s is %s (%i)\n", service , tok, val);
-					// char sys = SYSTEMD_RUNNING;
-					// for (int i=0; i<sizeof(tok); i++)
-					// {
-					// 	frpintf(stderr, "%#x -> %#x", tok[i], )
-					// }
+					// fprintf(stderr, "No esta corriendo: %s is %s\n", service , tok);
 					return 0;
 				}
 			}
@@ -527,24 +522,24 @@ void ros_is_down()
 
 void start_ros()
 {
-	fprintf(stdout, "Starting Ros\n");
+	// fprintf(stdout, "Starting Ros\n");
 
 	// Reiniciar servicio
 	start_service(TF);
-	fprintf(stdout, "Checking if Ros started\n");
+	// fprintf(stdout, "Checking if Ros started\n");
 	
-	if (check_service(TF) == 1)
+	/*if (check_service(TF) == STARTED)
 	{
 		ros_is_up();
 
 	} else {
 		ros_is_down();
-	}
+	}*/
 }
 
 void stop_ros()
 {
-	fprintf(stdout, "Stop Ros\n");
+	// fprintf(stdout, "Stop Ros\n");
 	
 	/*
 	* Fija el LED
@@ -552,20 +547,11 @@ void stop_ros()
 	*/
 	stop_service(TF);
 	// Realmente abajo
-	/*if (check_service(TF)==0)
+	/*if (check_service(TF)== STOPPED)
 	{
-		
-		led_hr();
-		status_ros = STOPPED;
-		//Temp
-		
-		
-
-
+		ros_is_down();
 	} else {
-
-		status_ros = STARTED;
-		led_on(RED);
+		ros_is_up();
 	}*/
 }
 
@@ -584,46 +570,43 @@ void javabot_is_down()
 
 void start_javabot()
 {
-	fprintf(stdout, "Start JavaBot\n");
+	// fprintf(stdout, "Start JavaBot\n");
 	
 	/*
 	* Corre servicio Javabot
 	* Pone LED GREEN en blink4
 	*/
-	/*start_service(TF);
+	/*
+	start_service(TF);
 
-	if (check_service(TF) == 1)
-	*/if (1) {
+	if (check_service(TF) == STARTED)
+	{
 		javabot_is_up();
 	} else {
 		javabot_is_down();
 	}
+	*/
 
 }
 
 void stop_javabot()
 {
-	fprintf(stdout, "Stop Javabot\n");
+	// fprintf(stdout, "Stop Javabot\n");
 	
 	/*
 	* Apaga el LED
 	* Detiene el servicio
 	*/
+	/*
 	stop_service(JavaBot);
 	
-	/*if (check_service(JavaBot)==0) // Realmente abajo
-	*/if (1) {	
-		
-		led_off(GREEN);
-		status_javabot = STOPPED;
-		
-
+	if (check_service(JavaBot)==STOPPED) // Realmente abajo
+	{	
+		javabot_is_down();
 	} else {
-		// No se detuvo, simular que corre
-		status_javabot = STARTED;
-		led_blink4(GREEN);
+		javabot_is_up();
 	}
-	
+	*/
 }
 
 void teleop_is_up()
@@ -644,12 +627,12 @@ void start_teleop()
 	* Corre servicio Teleop
 	* Pone LED GREEN en blink2
 	*/
-	fprintf(stdout, "Start Teleop\n");
+	// fprintf(stdout, "Start Teleop\n");
 
 	start_service(TeleOp);
 
-	/*if (check_service(TeleOp)==1)
-	*/if (1) {
+	if (check_service(TeleOp)==STARTED)
+	{
 		teleop_is_up();
 	} else {
 		teleop_is_down();
@@ -663,21 +646,15 @@ void stop_teleop()
 	* Fija el LED
 	* Detiene el servicio
 	*/
-	fprintf(stdout, "Stop Teleop\n");
+	// fprintf(stdout, "Stop Teleop\n");
 
 	stop_service(TeleOp);
 	// Realmente abajo
-	/*if (check_service(TeleOp)==0)
-	*/if (1) {
-		
-		led_on(GREEN);
-		status_teleop = STOPPED;
-		
-
+	if (check_service(TeleOp)==STOPPED)
+	{
+		teleop_is_down();
 	} else {
-
-		status_teleop = STARTED;
-		led_blink2(GREEN);
+		teleop_is_up();
 	}
 	
 }
