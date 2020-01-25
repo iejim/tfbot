@@ -32,8 +32,8 @@ typedef enum status_t {
 } status_t;
 
 typedef enum led_status_t {
-	ON,
 	OFF,
+	ON,
 	HR,
 	BLINK2,
 	BLINK4
@@ -127,7 +127,9 @@ status_t status_ros = STOPPED;
 #define RED RC_LED_RED
 
 led_status_t led_green = OFF;
+led_status_t old_led_green = OFF;
 led_status_t led_red = OFF;
+led_status_t old_led_red = OFF;
 
 int periods_green = 0;
 // int periods_red = 0;
@@ -510,7 +512,8 @@ void stop_service(const char* service)
 void ros_is_up()
 {
 	led_on(RED);
-	led_off(GREEN);
+	// No need to touch green.
+	// led_off(GREEN); 
 	status_ros = STARTED;
 }
 
@@ -661,7 +664,8 @@ void stop_teleop()
 
 
 void led_hr()
-{
+{	
+	// When RED is HR, GREEN must be in no other state
 	led_green = HR;
 	led_red = HR;
 }
@@ -673,10 +677,12 @@ void led_blink2(rc_led_t LED)
 	{
 		case GREEN:
 			led_green = BLINK2;
+			// led_red = OFF; //?
 			break;
 		
 		case RED:
 			led_red = BLINK2;
+			// led_green = OFF; //?
 			break;
 
 		default:
@@ -709,10 +715,12 @@ void led_off(rc_led_t LED)
 	switch (LED)
 	{
 		case GREEN:
+			old_led_green = led_green; 
 			led_green = OFF;
 			break;
 		
 		case RED:
+			old_led_red = led_red; 
 			led_red = OFF;
 			break;
 
@@ -747,19 +755,26 @@ void led_on(rc_led_t LED)
  */ 
 void process_leds()
 {
-	// Como se encienden los leds?
 	
 
 	switch (led_green)
 	{
 		case HR:
-			led_red = HR;
+			// led_red = HR;
 			break;
 		case ON:
-			on(GREEN);
+			if (old_led_green != led_green) //First time here
+			{
+				old_led_green = led_green;
+				on(GREEN);
+			}
 			break;
 		case OFF:
-			off(GREEN);
+			if (old_led_green != led_green) //First time here
+			{
+				old_led_green = led_green;
+				off(GREEN);
+			}
 			break;
 		case BLINK2:
 			blink2();
@@ -782,10 +797,18 @@ void process_leds()
 			// periods_green++;
 			break;
 		case ON:
-			on(RED);
+			if (old_led_red != led_red) //First time here
+			{
+				old_led_red = led_red;
+				on(RED);
+			}
 			break;
 		case OFF:
-			off(RED);
+			if (old_led_red != led_red) //First time here
+			{
+				old_led_red = led_red;
+				off(RED);
+			}
 			break;
 		case BLINK2:
 			blink2();
