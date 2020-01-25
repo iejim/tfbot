@@ -105,10 +105,21 @@ class TeleOpNode(object):
       msg.cmd1_izq = self.pad_a_drive(data.lY)
       msg.cmd2_der = self.pad_a_drive(data.rY)
 
-
+      # Interpreta y envia un mensaje a los servos
+      self.servos_brazos(data.L, data.R)
 
       self._pub_drivetrain.publish(msg)
       # rospy.loginfo("Enviando %s" % repr(msg))
+
+  def servos_brazos(self, numL, numR):
+    msgL = self._servos_msgL
+    msgR = self._servos_msgR
+
+    msgL.cmd = self.pad_a_drive(numL + 127)
+    msgR.cmd = self.pad_a_drive(numR + 127)
+
+    self._pub_servos.publish(msgL)
+    self._pub_servos.publish(msgR)
 
   def pad_a_drive(self, num):
     out_max = 100.0
