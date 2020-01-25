@@ -87,7 +87,7 @@ void teleop_is_down();
 
 void start_ros();
 void stop_ros();
-void ros_is_up();
+void ros_is_down();
 void ros_is_up();
 
 
