@@ -5,7 +5,7 @@ from time import sleep
 from tfbot_msgs.msg import gamepad
 from std_msgs.msg import String
 from tfbot_msgs.msg import drivetrain
-from tfbot_msgs.msg import servos_cmd
+from tfbot_msgs.msg import servo_cmd
 
 # Miembros Mensaje drivetrain
 # drivetrain:
@@ -14,7 +14,7 @@ from tfbot_msgs.msg import servos_cmd
 #   cmd2_der = 0
 
 # Miembros Mensaje Servos
-# servos_cmd:
+# servo_cmd:
 #   canal = [1,8]
 #   cmd1 = [-100, 100]
 
@@ -53,8 +53,8 @@ class TeleOpNode(object):
     if nombre:
       self._nombre_nodo = nombre
     self._cmd_msg = drivetrain()
-    self._servos_msgL = servos_cmd()
-    self._servos_msgR = servos_cmd()
+    self._servos_msgL = servo_cmd()
+    self._servos_msgR = servo_cmd()
 
     self._servos_msgL.canal = CANAL_SERVO_IZQ
     self._servos_msgR.canal = CANAL_SERVO_DER
@@ -77,7 +77,7 @@ class TeleOpNode(object):
 
     # Crear publicador
     self._pub_drivetrain = rospy.Publisher(self._topico_drivetrain, drivetrain, queue_size=2)
-    self._pub_servos = rospy.Publisher(self._topico_servos, servos_cmd, queue_size=2)
+    self._pub_servos = rospy.Publisher(self._topico_servos, servo_cmd, queue_size=2)
 
     # Crear suscriptores
     self._sub_gamepad = rospy.Subscriber(self._topico_gamepad, gamepad, self.gamepad_callback)
