@@ -136,6 +136,7 @@ int periods_green = 0;
 
 // Used to signal that a button was held, and its release shall be ignored.
 int ignore_release = 0;
+int service_check_periods = 0;
 
 
 /**
@@ -227,6 +228,7 @@ int main()
 
 void spin()
 {
+	check_main_processes();
 	process_leds();
 
 	rc_usleep(SPIN_PERIOD);
@@ -375,9 +377,13 @@ void on_pause_hold()
  */
 void check_main_processes()
 {
-	// what to do with the return value?
-	int status = 0;
+	
+  service_check_periods++;
+	if (service_check_periods < SERVICE_CHECK_CYCLES)
+		return;
 
+	service_check_periods = 0;
+	int status = 0;
 	status = check_service(TF);
 	if (status == STARTED && status_ros != STARTED ) // Previously down, but running
 	{
