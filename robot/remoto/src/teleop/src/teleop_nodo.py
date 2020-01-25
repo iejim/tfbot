@@ -115,8 +115,8 @@ class TeleOpNode(object):
     msgL = self._servos_msgL
     msgR = self._servos_msgR
 
-    msgL.cmd = self.pad_a_drive(numL + 127)
-    msgR.cmd = self.pad_a_drive(numR + 127)
+    msgL.cmd = self.pad_a_drive(numL + 127.0)
+    msgR.cmd = -self.pad_a_drive(numR + 127.0)
 
     self._pub_servos.publish(msgL)
     self._pub_servos.publish(msgR)
